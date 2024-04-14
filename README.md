@@ -1,1 +1,2 @@
-# Haera
+# Haera♥
+## mini project - todolist📝
