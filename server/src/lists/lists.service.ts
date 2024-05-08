@@ -17,6 +17,10 @@ export class ListsService {
         return this.listItems;
     }
 
+    getListItemById(id: string) : listItem {
+        return this.listItems.find((item) => item.id === id)
+    }
+
     createList() {
         const list = {
             id: uuid(),
@@ -40,12 +44,17 @@ export class ListsService {
         return listItem;
     }
 
-    updateListItem() {
+    updateListItem(id: string, todo_text: string, status: boolean) : listItem {
+        const listItem = this.getListItemById(id);
+        listItem.todo_text = todo_text;
+        listItem.status = status;
 
+        return listItem;
     }
 
-    deleteListItem() {
-
+    deleteListItem(id: string) : void {
+        const index = this.listItems.findIndex((item) => item.id == id)
+        this.listItems.splice(index, 1);
     }
 
 }
