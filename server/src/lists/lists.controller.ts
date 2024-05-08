@@ -1,6 +1,7 @@
 import { Controller, Get, Put, Body, Param } from '@nestjs/common';
 import { ListsService } from './lists.service';
-import { list, listItem } from './lists.model';
+import { list, listItem } from './list.model';
+import { CreateListItemDto } from './dto/create-listItem.dto';
 
 @Controller('lists')
 export class ListsController {
@@ -23,10 +24,8 @@ export class ListsController {
 
     @Put('/item')
     createListItem(
-        @Body('todo_text') todo_text: string,
-        @Body('list_id') list_id: string
-    ) : listItem {
-        return this.listsService.createListItem(todo_text, list_id);
+        @Body() createListItemDto: CreateListItemDto) : listItem {
+        return this.listsService.createListItem(createListItemDto);
     }
 
 }

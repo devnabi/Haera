@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuid } from 'uuid'
-import { InquiryStatus, list, listItem } from './lists.model';
+import { list, listItem } from './list.model';
+import { InquiryStatus } from "./list-inquiryStatus.enum";
+import { CreateListItemDto } from './dto/create-listItem.dto';
 
 @Injectable()
 export class ListsService {
@@ -24,16 +26,26 @@ export class ListsService {
         this.lists.push(list);
     }
 
-    createListItem(todo_text: string, list_id: string) : listItem {
+    createListItem(createListItemDto: CreateListItemDto) : listItem {
+        const { todo_text, list_id } = createListItemDto;
+        
         const listItem = {
             id: uuid(),
             todo_text,
             list_id,
-            status: false
+            status: false // 기본으로 생성되는 자리는 미완료(false)
         }
         this.listItems.push(listItem);
 
         return listItem;
+    }
+
+    updateListItem() {
+
+    }
+
+    deleteListItem() {
+
     }
 
 }
