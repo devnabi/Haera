@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, ParseArrayPipe, NotFoundException } from '@nestjs/common';
 import { ListsService } from './lists.service';
 import { list, listItem } from './list.model';
 import { CreateListItemDto } from './dto/create-listItem.dto';
@@ -27,13 +27,17 @@ export class ListsController {
         return this.listsService.getCompletedListItem();
     }
 
-    @Get('/item/keword')
-    getListItemByKeyword(@Query('keyword') keyword: string) {
-        return this.listsService.getListItemByKeyword(keyword);
+    @Get('/item/search')
+    getListItemByKeyword(@Query('keyword', ParseArrayPipe) keyword: string) {
+        const found = this.listsService.getListItemByKeyword(keyword);
+        if (found.length == 0) {
+            throw new NotFoundException(`검색하신 '${keyword}'를 가진 아이템을 찾을 수 없습니다.`);
+        }
+        return found;
     }
 
     @Get('/item/:id')
-    getListItemById(@Param('id') id: string ) {
+    getListItemById(@Param('id') id: string) {
         return this.listsService.getListItemById(id);
     }
 
@@ -43,6 +47,7 @@ export class ListsController {
     }
 
     @Post('/item')
+    @UsePipes(ValidationPipe)
     createListItem(@Body() createListItemDto: CreateListItemDto) : listItem {
         return this.listsService.createListItem(createListItemDto);
     }
