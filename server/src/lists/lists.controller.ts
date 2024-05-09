@@ -17,6 +17,16 @@ export class ListsController {
         return this.listsService.getAllListItem();
     }
 
+    @Get('/item/active')
+    getActiveListItem() {
+        return this.listsService.getActiveListItem();
+    }
+
+    @Get('/item/completed')
+    getCompletedListItem() {
+        return this.listsService.getCompletedListItem();
+    }
+
     @Get('/:id')
     getListItemById(@Param('id') id: string ) {
         return this.listsService.getListItemById(id);

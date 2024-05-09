@@ -17,6 +17,14 @@ export class ListsService {
         return this.listItems;
     }
 
+    getActiveListItem() {
+        return this.listItems.filter((item) => item.status == false);
+    }
+
+    getCompletedListItem() {
+        return this.listItems.filter((item) => item.status == true);
+    }
+
     getListItemById(id: string) : listItem {
         return this.listItems.find((item) => item.id === id)
     }
