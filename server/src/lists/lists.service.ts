@@ -9,20 +9,24 @@ export class ListsService {
     private lists: list[] = [];
     private listItems: listItem[] = [];
 
-    getAllList() {
+    getAllList() : list[] {
         return this.lists;
     }
     
-    getAllListItem() {
+    getAllListItem() : listItem[] {
         return this.listItems;
     }
 
-    getActiveListItem() {
+    getActiveListItem() : listItem[] {
         return this.listItems.filter((item) => item.status == false);
     }
 
-    getCompletedListItem() {
+    getCompletedListItem() : listItem[] {
         return this.listItems.filter((item) => item.status == true);
+    }
+
+    getListItemByKeyword(keyword: string) : listItem[] {
+        return this.listItems.filter((item) => item.todo_text.indexOf(keyword)!= -1);
     }
 
     getListItemById(id: string) : listItem {
@@ -45,7 +49,7 @@ export class ListsService {
             id: uuid(),
             todo_text,
             list_id,
-            status: false // 기본으로 생성되는 자리는 미완료(false)
+            status: false // 기본으로 생성되는 아이템은 미완료(false)
         }
         this.listItems.push(listItem);
 
