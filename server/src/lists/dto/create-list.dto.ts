@@ -1,7 +1,6 @@
 import { InquiryStatus } from "../list-inquiryStatus.enum";
 
 export class CreateListDto {
-    id: string | bigint;
-    user_id?: string | bigint;
+    user_id?: number;
     inquiry_status: InquiryStatus;
 }
