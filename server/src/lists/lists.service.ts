@@ -1,72 +1,96 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid'
-import { list, listItem } from './list.model';
 import { InquiryStatus } from "./list-inquiryStatus.enum";
 import { CreateListItemDto } from './dto/create-listItem.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { List, ListItem } from './list.entitiy';
+import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class ListsService {
-    private lists: list[] = [];
-    private listItems: listItem[] = [];
+    constructor(
+        @InjectRepository(List)
+        private listRepository : Repository<List>,
+        @InjectRepository(ListItem)
+        private listItemRepository : Repository<ListItem>
+    ) {}
 
-    getAllList() : list[] {
-        return this.lists;
+    async getAllList(): Promise<List[]> {
+        const lists = await this.listRepository.find();
+        return lists;
     }
     
-    getAllListItem() : listItem[] {
-        return this.listItems;
+    async getAllListItem(): Promise<ListItem[]> {
+        const allListItem = await this.listItemRepository.find();
+        return allListItem;
     }
 
-    getActiveListItem() : listItem[] {
-        return this.listItems.filter((item) => item.status == false);
+    async getActiveListItems(): Promise<ListItem[]> {
+        const activeListItems = await this.listItemRepository.find({
+            where: {
+                status: false
+            }
+        });
+
+        return activeListItems;
     }
 
-    getCompletedListItem() : listItem[] {
-        return this.listItems.filter((item) => item.status == true);
+    async getCompletedListItems(): Promise<ListItem[]> {
+        const completedListItems = await this.listItemRepository.find({
+            where: {
+                status: true
+            }
+        })
+
+        return completedListItems;
     }
 
-    getListItemByKeyword(keyword: string) : listItem[] {
-        return this.listItems.filter((item) => item.todo_text.indexOf(keyword)!= -1);
+    async getListItemsByKeyword(keyword: string): Promise<ListItem[]> {
+        const listItems = await this.listItemRepository.findBy({
+            todo_text: Like(`%${keyword}%`)
+        });
+
+        return listItems;
     }
 
-    getListItemById(id: string) : listItem {
-        return this.listItems.find((item) => item.id === id)
+    async getListItemById(id: number): Promise<ListItem> {
+        const listItem = await this.listItemRepository.findOneBy({ id });
+        return listItem;
     }
 
-    createList() {
-        const list = {
-            id: uuid(),
+    async createList(): Promise<List> {
+        const list = this.listRepository.create({
             inquiry_status: InquiryStatus.All
-        }
+        })
 
-        this.lists.push(list);
+        return this.listRepository.save(list);
     }
 
-    createListItem(createListItemDto: CreateListItemDto) : listItem {
+    async createListItem(createListItemDto: CreateListItemDto): Promise<ListItem> {
         const { todo_text, list_id } = createListItemDto;
-        
-        const listItem = {
-            id: uuid(),
+        const listItem = this.listItemRepository.create({
             todo_text,
             list_id,
-            status: false // 기본으로 생성되는 아이템은 미완료(false)
-        }
-        this.listItems.push(listItem);
+            status: false
+        });
 
-        return listItem;
+        return this.listItemRepository.save(listItem);
     }
 
-    updateListItem(id: string, todo_text: string, status: boolean) : listItem {
-        const listItem = this.getListItemById(id);
-        listItem.todo_text = todo_text;
-        listItem.status = status;
+    async updateListItem(id: number, todo_text: string, status: boolean): Promise<UpdateResult> {
+        const updateResult = await this.listItemRepository.update(
+            id,
+            {
+                todo_text: todo_text,
+                status: status
+            }
+        );
 
-        return listItem;
+        return updateResult;
     }
 
-    deleteListItem(id: string) : void {
-        const index = this.listItems.findIndex((item) => item.id == id)
-        this.listItems.splice(index, 1);
+    async deleteListItem(id: number): Promise<DeleteResult> {
+        const deleteResult = await this.listItemRepository.delete(id);
+        return deleteResult;
     }
 
 }
