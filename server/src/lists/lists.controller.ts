@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, ParseArrayPipe, NotFoundException } from '@nestjs/common';
 import { ListsService } from './lists.service';
-import { list, listItem } from './list.model';
 import { CreateListItemDto } from './dto/create-listItem.dto';
 
 @Controller('lists')
@@ -8,7 +7,7 @@ export class ListsController {
     constructor(private listsService : ListsService) {}
     
     @Get()
-    getAllList(): list[] {
+    getAllList() {
         return this.listsService.getAllList();
     }
 
@@ -48,7 +47,7 @@ export class ListsController {
 
     @Post('/item')
     @UsePipes(ValidationPipe)
-    createListItem(@Body() createListItemDto: CreateListItemDto) : listItem {
+    createListItem(@Body() createListItemDto: CreateListItemDto) {
         return this.listsService.createListItem(createListItemDto);
     }
 
@@ -57,7 +56,7 @@ export class ListsController {
         @Param('id') id: string,
         @Body('todo_text') todo_text: string,
         @Body('status') status: boolean
-    ) : listItem {
+    ) {
         return this.listsService.updateListItem(id, todo_text, status);
     }
 
