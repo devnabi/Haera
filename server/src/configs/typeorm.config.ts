@@ -1,3 +1,4 @@
+import { User } from "src/auth/user.entity";
 import { List, ListItem } from "src/lists/list.entitiy";
 import { SqliteConnectionOptions } from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
@@ -16,5 +17,5 @@ export const typeORMConfig : SqliteConnectionOptions = {
 
     // 엔티티 디렉토리 지정 : 생성한 모든 엔티티 포함
     // entities: [__dirname + '../**/*.entity{.ts,.js}']
-    entities: [List, ListItem]
+    entities: [List, ListItem, User]
 }
