@@ -34,7 +34,11 @@ export class AuthController {
     }
 
     @Post()
-    createUser(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
+    async createUser(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
+        const emailCheckResult = await this.authService.getEmailExistence(authCredentialsDto.email);
+        if (emailCheckResult) {
+            throw new ConflictException(`이미 등록된 이메일입니다.`);
+        }
         const user = this.authService.createUser(authCredentialsDto);
         return user;
     }
