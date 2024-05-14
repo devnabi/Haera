@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
@@ -32,6 +32,21 @@ export class AuthService {
         return user;
     }
     
+    async getUser(authCredentialsDto: AuthCredentialsDto): Promise<User> {
+        const { email, password } = authCredentialsDto;
+        const user = await this.authRepository.findOneBy({ email });
+        if (!user) {
+            throw new UnauthorizedException(`Sign in failed.`);
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException(`Sign in failed.`);
+        }
+        
+        return user;
+    }
+
     async createUser(authCredentialsDto: AuthCredentialsDto): Promise<void> {
         const { email, password, nickname } = authCredentialsDto;
         const salt = await bcrypt.genSalt();

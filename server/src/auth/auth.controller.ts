@@ -1,8 +1,9 @@
-import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 
 @Controller('auth')
 export class AuthController {
@@ -33,8 +34,14 @@ export class AuthController {
         return found;
     }
 
-    @Post()
-    async createUser(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
+    @Post('/signin')
+    async signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<User> {
+        const user = await this.authService.getUser(authCredentialsDto);
+        return user;
+    }
+
+    @Post('/signup')
+    async signUp(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
         const emailCheckResult = await this.authService.getEmailExistence(authCredentialsDto.email);
         if (emailCheckResult) {
             throw new ConflictException(`이미 등록된 이메일입니다.`);
