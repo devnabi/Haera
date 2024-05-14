@@ -3,7 +3,6 @@ import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 
 @Controller('auth')
 export class AuthController {
@@ -35,9 +34,9 @@ export class AuthController {
     }
 
     @Post('/signin')
-    async signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<User> {
-        const user = await this.authService.getUser(authCredentialsDto);
-        return user;
+    signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
+        const accessToken = this.authService.getUser(authCredentialsDto);
+        return accessToken;
     }
 
     @Post('/signup')

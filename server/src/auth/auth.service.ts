@@ -4,12 +4,14 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectRepository(User)
-        private authRepository : Repository<User>
+        private authRepository : Repository<User>,
+        private jwtService : JwtService
     ) {}
 
     async getAllUser(): Promise<User[]> {
@@ -32,7 +34,7 @@ export class AuthService {
         return user;
     }
     
-    async getUser(authCredentialsDto: AuthCredentialsDto): Promise<User> {
+    async getUser(authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
         const { email, password } = authCredentialsDto;
         const user = await this.authRepository.findOneBy({ email });
         if (!user) {
@@ -43,8 +45,10 @@ export class AuthService {
         if (!isPasswordValid) {
             throw new UnauthorizedException(`Sign in failed.`);
         }
-        
-        return user;
+        // 로그인 성공 시 JWT토큰 생성 (Payload + Secret)
+        const payload = { email };
+        const accessToken = this.jwtService.sign(payload);
+        return { accessToken };
     }
 
     async createUser(authCredentialsDto: AuthCredentialsDto): Promise<void> {
