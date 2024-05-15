@@ -1,8 +1,9 @@
-import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UnauthorizedException } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UnauthorizedException, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
         return emailCheckResult;
     }
     
-    @Get('/:id')
+    @Get('/find/:id')
     async getUserById(@Param('id') id: number): Promise<User> {
         const found = await this.authService.getUserById(id);
         if (!found) {
@@ -47,6 +48,13 @@ export class AuthController {
         }
         const user = this.authService.createUser(authCredentialsDto);
         return user;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('/test')
+    authTest(@Request() req) {
+        console.log(req);
+        return req.user;
     }
 
     @Patch('/:id')
