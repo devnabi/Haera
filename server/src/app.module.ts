@@ -5,8 +5,10 @@ import { typeORMConfig } from './configs/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(typeORMConfig),
+  imports: [
+    TypeOrmModule.forRoot(typeORMConfig),
     ListsModule,
-    AuthModule],
+    AuthModule
+  ],
 })
 export class AppModule {}
