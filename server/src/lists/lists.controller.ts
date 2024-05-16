@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, ParseArrayPipe, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, ParseArrayPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { ListsService } from './lists.service';
 import { CreateListItemDto } from './dto/create-listItem.dto';
 import { List, ListItem } from './list.entitiy';
 import { DeleteResult, UpdateResult } from 'typeorm';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('lists')
+@UseGuards(JwtAuthGuard)
 export class ListsController {
     constructor(private listsService : ListsService) {}
     
