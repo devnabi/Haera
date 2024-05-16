@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InquiryStatus } from "./list-inquiryStatus.enum";
 import { CreateListItemDto } from './dto/create-listItem.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { List, ListItem } from './list.entitiy';
+import { List } from './list.entitiy';
+import { ListItem } from './listItem.entity';
 import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
 
 @Injectable()

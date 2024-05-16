@@ -1,5 +1,6 @@
 import { User } from "src/auth/user.entity";
-import { List, ListItem } from "src/lists/list.entitiy";
+import { List } from "src/lists/list.entitiy";
+import { ListItem } from "src/lists/listItem.entity";
 import { SqliteConnectionOptions } from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
 export const typeORMConfig : SqliteConnectionOptions = {
