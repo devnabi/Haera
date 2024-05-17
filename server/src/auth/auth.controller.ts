@@ -1,9 +1,8 @@
-import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UnauthorizedException, UseGuards, Request } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -14,7 +13,7 @@ export class AuthController {
         return this.authService.getAllUser();
     }
     
-    @Get('/emailcheck')
+    @Get('/checkEmail')
     async getEmailExistence(
         @Body('email') email: string
     ): Promise<Boolean> {
@@ -34,13 +33,13 @@ export class AuthController {
         return found;
     }
 
-    @Post('/signin')
+    @Post('/signIn')
     signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
-        const accessToken = this.authService.getUser(authCredentialsDto);
+        const accessToken = this.authService.getUserToken(authCredentialsDto);
         return accessToken;
     }
 
-    @Post('/signup')
+    @Post('/signUp')
     async signUp(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
         const emailCheckResult = await this.authService.getEmailExistence(authCredentialsDto.email);
         if (emailCheckResult) {
@@ -48,13 +47,6 @@ export class AuthController {
         }
         const user = this.authService.createUser(authCredentialsDto);
         return user;
-    }
-
-    @UseGuards(JwtAuthGuard)
-    @Get('/test')
-    authTest(@Request() req) {
-        console.log(req);
-        return req.user;
     }
 
     @Patch('/:id')
