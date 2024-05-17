@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/auth/user.entity";
+import { List } from "./list.entitiy";
 
 @Entity()
 export class ListItem extends BaseEntity {
@@ -13,4 +15,10 @@ export class ListItem extends BaseEntity {
 
     @Column()
     status: boolean;
+
+    @ManyToOne((type)=> User, (user)=> user.listItem) // { eager: false }
+    user: User;
+
+    @ManyToOne((type)=> List, (list)=> list.listItem) // { eager: true }
+    list: List;
 }
