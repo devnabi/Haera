@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, ParseArrayPipe, NotFoundException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, NotFoundException, UseGuards, Request } from '@nestjs/common';
 import { ListsService } from './lists.service';
 import { CreateListItemDto } from './dto/create-listItem.dto';
 import { List } from './list.entitiy';
@@ -12,62 +12,80 @@ export class ListsController {
     constructor(private listsService : ListsService) {}
     
     @Get()
-    getAllList(): Promise<List[]> {
-        return this.listsService.getAllList();
+    getAllList(@Request() req): Promise<List[]> {
+        const user = req.user;
+        return this.listsService.getAllList(user);
     }
 
     @Get('/item')
-    getAllListItem(): Promise<ListItem[]> {
-        return this.listsService.getAllListItem();
+    getAllListItem(@Request() req): Promise<ListItem[]> {
+        const user = req.user;
+        return this.listsService.getAllListItem(user);
     }
 
     @Get('/item/active')
-    getActiveListItems(): Promise<ListItem[]> {
-        return this.listsService.getActiveListItems();
+    getActiveListItems(@Request() req): Promise<ListItem[]> {
+        const user = req.user;
+        return this.listsService.getActiveListItems(user);
     }
 
     @Get('/item/completed')
-    getCompletedListItems(): Promise<ListItem[]> {
-        return this.listsService.getCompletedListItems();
+    getCompletedListItems(@Request() req): Promise<ListItem[]> {
+        const user = req.user;
+        return this.listsService.getCompletedListItems(user);
     }
 
     @Get('/item/search')
-    async getListItemsByKeyword(@Query('keyword') keyword: string): Promise<ListItem[]> {
-        const found = await this.listsService.getListItemsByKeyword(keyword);
-        if (found.length == 0) {
-            throw new NotFoundException(`검색하신 '${keyword}'를 가진 아이템을 찾을 수 없습니다.`);
-        }
-        return found;
+    getListItemsByKeyword(
+        @Query('keyword') keyword: string,
+        @Request() req
+    ): Promise<ListItem[]> {
+        const user = req.user;
+        return this.listsService.getListItemsByKeyword(keyword, user);
     }
 
     @Get('/item/:id')
-    getListItemById(@Param('id') id: number): Promise<ListItem> {
-        return this.listsService.getListItemById(id);
+    getListItemById(
+        @Param('id') id: number,
+        @Request() req
+    ): Promise<ListItem> {
+        const user = req.user;
+        return this.listsService.getListItemById(id, user);
     }
 
     @Post()
-    createList(): Promise<List> {
-        return this.listsService.createList();      
+    createList(@Request() req): Promise<List> {
+        const user = req.user;
+        return this.listsService.createList(user);
     }
 
     @Post('/item')
     @UsePipes(ValidationPipe)
-    createListItem(@Body() createListItemDto: CreateListItemDto): Promise<ListItem> {
-        return this.listsService.createListItem(createListItemDto);
+    createListItem(
+        @Body() createListItemDto: CreateListItemDto,
+        @Request() req
+    ): Promise<ListItem> {
+        const user = req.user;
+        return this.listsService.createListItem(createListItemDto, user);
     }
 
     @Patch('/item/:id')
     updateListItem(
         @Param('id') id: number,
         @Body('todo_text') todo_text: string,
-        @Body('status') status: boolean
+        @Body('status') status: boolean,
+        @Request() req
     ): Promise<UpdateResult> {
-        return this.listsService.updateListItem(id, todo_text, status);
+        const user = req.user;
+        return this.listsService.updateListItem(id, todo_text, status, user);
     }
 
     @Delete('/item/:id')
-    deleteListItem(@Param('id') id: number): Promise<DeleteResult> {
-        return this.listsService.deleteListItem(id);
+    deleteListItem(
+        @Param('id') id: number,
+        @Request() req
+    ): Promise<DeleteResult> {
+        const user = req.user;
+        return this.listsService.deleteListItem(id, user);
     }
-
 }
