@@ -34,7 +34,7 @@ export class AuthService {
         return user;
     }
     
-    async getUser(authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
+    async getUserToken(authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
         const { email, password } = authCredentialsDto;
         const user = await this.authRepository.findOneBy({ email });
         if (!user) {
