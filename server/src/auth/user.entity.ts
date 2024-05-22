@@ -17,10 +17,13 @@ export class User extends BaseEntity {
     @Column()
     nickname: string;
 
+    @Column({ default: false })
+    isEmailVerified: boolean;
+
     @JoinColumn()
-    @OneToOne((type)=> List, (list)=> list.user, { eager: true })
+    @OneToOne((type) => List, (list) => list.user, { eager: true })
     list: List;
 
-    @OneToMany((type)=> ListItem, (listItem)=> listItem.user, { eager: true })
+    @OneToMany((type) => ListItem, (listItem) => listItem.user, { eager: true })
     listItem: ListItem[];
 }
