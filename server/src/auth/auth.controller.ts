@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
@@ -6,24 +6,43 @@ import { DeleteResult, UpdateResult } from 'typeorm';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService : AuthService) {}
+    constructor(private authService: AuthService) {}
 
     @Get()
     getAllUser(): Promise<User[]> {
         return this.authService.getAllUser();
     }
-    
+
     @Get('/checkEmail')
     async getEmailExistence(
-        @Body('email') email: string
+        @Query('email') email: string
     ): Promise<Boolean> {
         const emailCheckResult = await this.authService.getEmailExistence(email);
-        if (emailCheckResult) {
-            throw new ConflictException(`이미 등록된 이메일입니다.`);
-        }
         return emailCheckResult;
     }
-    
+
+    @Get('/checkNickName')
+    async getNickNameExistence(
+        @Query('nickName') nickName: string
+    ): Promise<Boolean> {
+        const nickNameCheckResult = await this.authService.getNickNameExistence(nickName);
+        return nickNameCheckResult
+    }
+
+    @Post('/verifyEmail')
+    async sendVerificationEmail(
+        @Body('email') email: string
+    ) {
+        return await this.authService.sendVerificationEmail(email);
+    }
+
+    @Patch('/updateEmailStatus/:email')
+    async updateEmailVerificationStatus(
+        @Param('email') email: string,
+    ): Promise<UpdateResult> {
+        return await this.authService.updateEmailVerificationStatus(email);
+    }
+
     @Get('/find/:id')
     async getUserById(@Param('id') id: number): Promise<User> {
         const found = await this.authService.getUserById(id);
@@ -34,19 +53,15 @@ export class AuthController {
     }
 
     @Post('/signIn')
-    signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{accessToken: string}> {
-        const accessToken = this.authService.getUserToken(authCredentialsDto);
+    signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
+        const accessToken = this.authService.signIn(authCredentialsDto);
         return accessToken;
     }
 
     @Post('/signUp')
-    async signUp(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<void> {
-        const emailCheckResult = await this.authService.getEmailExistence(authCredentialsDto.email);
-        if (emailCheckResult) {
-            throw new ConflictException(`이미 등록된 이메일입니다.`);
-        }
-        const user = this.authService.createUser(authCredentialsDto);
-        return user;
+    async signUp(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
+        const accessToken = this.authService.signUp(authCredentialsDto);
+        return accessToken;
     }
 
     @Patch('/:id')
