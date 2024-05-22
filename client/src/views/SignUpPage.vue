@@ -9,44 +9,51 @@
 
         <div class="container mt-3">
 
+          <!-- 이메일이 인증되었으면 확인 문구를 보여주기 -->
           <div class="row justify-content-center">
             <label for="exampleInputEmail1"
               class="col-form-label col-form-label-lg mt-4 custom-cursor-default-hover">Email
               Address</label>
             <div class="input-group">
-              <input type="email" class="form-control form-control-lg" id="exampleInputEmail1"
+              <input type="email" v-model="email" class="form-control form-control-lg" id="exampleInputEmail1"
                 aria-describedby="emailHelp" placeholder="Haera@example.com">
-              <button class="btn btn-secondary btn-sm" type="button" id="button-addon2">Email Verification</button>
+              <button @click="sendVerificationEmail(), emailVerification()" class="btn btn-secondary btn-sm" type="button"
+                id="button-addon2">Email
+                Verification</button>
             </div>
           </div>
-          
+
           <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
 
           <div class="row justify-content-center">
             <label for="exampleInputPassword1" class="col-form-label col-form-label-lg mt-4">Password</label>
             <div class="input-group">
-              <input type="password" class="form-control form-control-lg" id="exampleInputPassword1"
+              <input type="password" v-model="password" class="form-control form-control-lg" id="exampleInputPassword1"
                 placeholder="Password" autocomplete="off">
             </div>
           </div>
 
+          <!-- 비밀번호가 위의 것과 다르면 문구로 보여주기 -->
           <div class="row justify-content-center">
             <label for="exampleInputPassword1" class="col-form-label col-form-label-lg mt-4">Check Password</label>
             <div class="input-group">
-              <input type="password" class="form-control form-control-lg" id="exampleInputPassword1"
-                placeholder="Check Password" autocomplete="off">
+              <input type="password" v-model="checkPassword" class="form-control form-control-lg"
+                id="exampleInputPassword1" placeholder="Check Password" autocomplete="off">
             </div>
           </div>
 
+          <!-- 입력한 닉네임의 가능여부를 문구로 보여주기 -->
           <div class="row justify-content-center">
             <label for="nick name" class="col-form-label col-form-label-lg mt-4">Nick Name</label>
             <div class="input-group">
-              <input type="text" class="form-control form-control-lg" placeholder="Nick Name"
+              <input type="text" v-model="nickName" class="form-control form-control-lg" placeholder="Nick Name"
                 aria-label="Recipient's username" aria-describedby="button-addon2">
-              <button class="btn btn-secondary btn-sm" type="button" id="button-addon2">Check Availability</button>
+              <button @click="checkAvailability" class="btn btn-secondary btn-sm" type="button" id="button-addon2">Check
+                Availability</button>
             </div>
           </div>
 
+          <!-- @click="signUp" -->
           <button type="submit" class="btn btn-primary btn-lg my-5">Sign Up!</button>
 
         </div>
@@ -57,8 +64,84 @@
 </template>
   
 <script>
+import axios from 'axios';
+
 export default {
-  name: 'SignUpPage'
+  name: 'SignUpPage',
+
+  data() {
+    return {
+      email: "",
+      password: "",
+      checkPassword: "",
+      nickName: ""
+    }
+  },
+
+  methods: {
+    async sendVerificationEmail() {
+      // 이메일 인증이 되었으면 알림이 떠야함
+      try {
+          const response = await axios.post("/auth/verifyEmail", {
+            email: this.email
+          });
+          console.log("이메일 인증 여부: ", response.status);
+
+      } catch (error) {
+        console.log("error", error);
+      }
+    },
+
+    async emailVerification() {
+      // 이메일 존재 여부 확인 요청
+      // 존재하면 이미 존재한다고 알림
+      try {
+        const response = await axios.get("/auth/checkEmail", {
+          params: {
+            email: this.email
+          }
+        });
+        console.log("이메일 존재 여부: ", response.data);
+
+        if (response.data) {
+          console.log("이미 사용중인 이메일입니다.");
+        }
+
+      } catch (error) {
+        if (error.response && error.response.status === 409) {
+          console.log("error: 이미 사용중인 이메일입니다.", error);
+        } else {
+          console.log("error", error);
+        }
+      }
+    },
+
+    async checkAvailability() {
+      //닉네임 중복 체크 요청
+      // 닉네임이 중복되면 중복됐다는 알림
+      try {
+        const response = await axios.get("/auth/checkNickName", {
+          params: {
+            nickName: this.nickName
+          }
+      });
+      console.log("닉네임 중복 여부: ", response.data);
+      } catch (error) {
+        console.log("error", error);
+      }
+    },
+
+    signUp() {
+      // 회원가입이 성공했으면 알림창 띄어주고 로그인 화면으로 ㄱㄱ
+      axios.post("http://localhost:3000/auth/signUp", {
+        email: this.email,
+        password: this.password,
+        checkPassword: this.checkPassword,
+        nickName: this.nickName
+      });
+    }
+  }
+
 }
 </script>
   
