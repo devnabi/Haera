@@ -19,7 +19,7 @@
       </ul>
     </div> -->
     <div class="col-1 d-flex justify-content-between"> <!-- 수평 정렬을 위한 부분 -->
-      <button @click="goToLogin" type="button" class="btn btn-outline-dark px-3 pt-2">Login</button>
+      <button @click="goToSignIn" type="button" class="btn btn-outline-dark px-3 pt-2">Sign In</button>
       <button @click="goToMyProfileUpdate" class="btn btn-dark btn-sm">⚙️</button>
     </div>
 
@@ -37,8 +37,8 @@ export default {
     goToMain() {
       this.$router.push('/');
     },
-    goToLogin() {
-      this.$router.push('/login');
+    goToSignIn() {
+      this.$router.push('/signin');
     },
     goToMyProfileUpdate() {
       this.$router.push('/myprofileupdate');
