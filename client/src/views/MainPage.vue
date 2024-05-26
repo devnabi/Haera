@@ -159,7 +159,41 @@
 </template>
 
 <script>
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
+
 export default {
-  name: 'MainPage'
+  name: 'MainPage',
+
+  data() {
+    return {
+      showPopup: false
+    }
+  },
+
+  created() {
+    // 파라미터 값이 true라면(회원가입에 성공했다면) Toast popup
+    if (this.$route.query.registered) {
+      this.showPopup = true;
+      this.notify();
+    }
+  },
+
+  setup() {
+    const notify = () => {
+      toast("이메일 인증 링크를 보냈습니다! \n계정을 유지하려면 7일 이내로 인증을 완료하세요.", {
+        autoClose: false,
+        position: "bottom-right",
+        theme: "dark",
+        type: "warning",
+        transition: "bounce",
+        closeOnClick: true,
+        style: {
+          whiteSpace: "pre-line", // 줄바꿈
+        }
+      });
+    }
+    return { notify };
+  },
 }
 </script>
