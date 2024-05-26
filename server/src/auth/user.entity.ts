@@ -3,7 +3,7 @@ import { ListItem } from "src/lists/listItem.entity";
 import { List } from "src/lists/list.entitiy";
 
 @Entity()
-@Unique(['nickname'])
+@Unique(['nickName'])
 export class User extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -11,11 +11,11 @@ export class User extends BaseEntity {
     @Column()
     email: string;
 
-    @Column()
+    @Column({ nullable: true })
     password: string;
 
-    @Column()
-    nickname: string;
+    @Column({ nullable: false })
+    nickName: string;
 
     @Column({ default: false })
     isEmailVerified: boolean;
