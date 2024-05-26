@@ -21,5 +21,5 @@ export class AuthCredentialsDto {
     // 한글도 되게 수정하기? 포기?
     @Length(2, 25)
     @NotContains(" ") // 공백포함 X
-    nickname: string;
+    nickName: string;
 }
