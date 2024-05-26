@@ -1,12 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Main from '@/views/MainPage.vue';
 import Error from '@/views/ErrorPage';
-import Login from '@/views/LoginPage.vue';
+import SignIn from '@/views/SignInPage';
 import SignUp from '@/views/SignUpPage.vue';
 import MyProfileUpdate from '@/views/MyProfileUpdatePage.vue';
 import FindPassword from '@/views/FindPassword.vue';
 import LeaveCheck from '@/views/LeaveCheck.vue';
 import LeaveSuccess from '@/views/LeaveSuccess.vue';
+import EmailVerificationSuccess from '@/views/EmailVerificationSuccessPage.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,9 +23,9 @@ const router = createRouter({
       component: Error
     },
     {
-      path: '/login',
-      name: 'LoginPage',
-      component: Login
+      path: '/signin',
+      name: 'SignInPage',
+      component: SignIn
     },
     {
       path: '/signup',
@@ -50,6 +51,11 @@ const router = createRouter({
       path: '/leavesuccess',
       name: 'LeaveSuccess',
       component: LeaveSuccess
+    },
+    {
+      path: '/emailverificationsuccess',
+      name: 'EmailVerificationSuccessPage',
+      component: EmailVerificationSuccess
     },
   ]
 });
