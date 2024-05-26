@@ -29,18 +29,20 @@ export class AuthController {
         return nickNameCheckResult
     }
 
-    @Post('/verifyEmail')
+    @Post('/sendVerificationEmail/:token')
     async sendVerificationEmail(
-        @Body('email') email: string
+        @Param('token') token: string
     ) {
-        return await this.authService.sendVerificationEmail(email);
+        return await this.authService.sendVerificationEmail(token);
     }
 
-    @Patch('/updateEmailStatus/:email')
-    async updateEmailVerificationStatus(
-        @Param('email') email: string,
-    ): Promise<UpdateResult> {
-        return await this.authService.updateEmailVerificationStatus(email);
+    @Post('/verifyTokenAndUpdateEmailVerificationStatus')
+    async verifyTokenAndUpdateEmailVerificationStatus(
+        @Query('token') token: string
+    ) {
+        const email = await this.authService.verifyTokenAndSaveEmail(token);
+        const updateResult = await this.authService.updateEmailVerificationStatus(email);
+        return updateResult;
     }
 
     @Get('/find/:id')
@@ -59,7 +61,7 @@ export class AuthController {
     }
 
     @Post('/signUp')
-    async signUp(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
+    async signUp(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const accessToken = this.authService.signUp(authCredentialsDto);
         return accessToken;
     }
