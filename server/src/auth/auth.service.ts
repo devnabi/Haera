@@ -34,57 +34,49 @@ export class AuthService {
     }
 
     async getEmailExistence(email: string): Promise<Boolean> {
-        const emailCheckResult = await this.authRepository.exists({
-            where: {
-                email: email
-            }
-        });
+        const emailCheckResult = await this.authRepository.existsBy({ email: email });
 
         return emailCheckResult;
     }
 
     async getNickNameExistence(nickName: string): Promise<Boolean> {
-        const nickNameCheckResult = await this.authRepository.exists({
-            where: {
-                nickname: nickName
-            }
-        });
+        const nickNameCheckResult = await this.authRepository.existsBy({ nickName: nickName });
 
         return nickNameCheckResult;
     }
 
-    async sendVerificationEmail(email: string) {
-        // 이메일 존재 여부 확인 후 이메일 보내기
-        const emailExists = await this.getEmailExistence(email);
+    async sendVerificationEmail(token: string) {
+        // 가입 성공 시 생성된 토큰에서 페이로드 추출
+        const payload = this.jwtService.verify(token);
 
-        if (!emailExists) {
-            // 이메일이 유효한지 인증을 위한 토큰 생성
-            const payload = { email };
-            const emailVerificationToken = this.jwtService.sign(payload);
+        // 이메일 인증 링크
+        const emailverificationLink = `${process.env.HAERA_URL}/emailverificationsuccess?token=${token}`;
 
-            // 이메일 인증 링크
-            const emailverificationLink = `${process.env.HAERA_URL}/verifyEmail?token=${emailVerificationToken}`;
-
-            const mailOptions = {
-                from: process.env.SMTP_USER,
-                to: email,
-                Subject: "Welcome to Haera! Verify Your Email Address",
-                html: `<h1>Email Verification</h1>
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: payload.email,
+            Subject: "Welcome to Haera! Verify Your Email Address",
+            html: `<h1>Email Verification</h1>
             <p>링크를 누르면 이메일이 인증됩니다.</p>
             <a href= "${emailverificationLink}">Verify Email</a>`
-            }
-
-            return await this.transporter.sendMail(mailOptions);
         }
+
+        return await this.transporter.sendMail(mailOptions);
     }
 
-    async updateEmailVerificationStatus(email: string): Promise<UpdateResult> {
-        // 인증이 되었다면 DB에 이메일 상태 Update
+    // 토큰이 일치하는지 확인
+    async verifyTokenAndSaveEmail(token: string) {
+        const payload = this.jwtService.verify(token);
+        const email = payload.email;
+
+        return email;
+    }
+
+    // Token으로 인증된 이메일의 상태를 업데이트
+    async updateEmailVerificationStatus(email: string) {
         const updateResult = await this.authRepository.update(
-            email,
-            {
-                isEmailVerified: true
-            }
+            { email },
+            { isEmailVerified: true }
         );
 
         return updateResult;
@@ -96,7 +88,6 @@ export class AuthService {
     }
 
     async signIn(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        // 이메일 검증, 닉네임 중복 확인이 다 되었음을 확인해야 함
         const { email, password } = authCredentialsDto;
         const user = await this.authRepository.findOneBy({ email });
         if (!user) {
@@ -115,13 +106,27 @@ export class AuthService {
     }
 
     async signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        const { email, password, nickname } = authCredentialsDto;
+        const { email, password, nickName } = authCredentialsDto;
+        // 이메일이 DB에 존재하는지 확인
+        const emailExists = await this.authRepository.existsBy({ email });
+
+        // 요청한 이메일이 이미 존재할 경우에만 이 유저의 상태 확인
+        if (emailExists) {
+            throw new UnauthorizedException("이미 등록된 이메일입니다.");
+        }
+
+        // 닉네임 중복 확인
+        const nickNameExists = await this.getNickNameExistence(nickName);
+        if (nickNameExists) {
+            throw new UnauthorizedException("이미 등록된 닉네임입니다.");
+        }
+
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
         const user = this.authRepository.create({
             email,
             password: hashedPassword,
-            nickname,
+            nickName
         });
 
         await this.authRepository.save(user);
@@ -129,16 +134,21 @@ export class AuthService {
         // 회원가입 성공 시 JWT토큰 생성 (Payload + Secret)
         const payload = { email };
         const accessToken = this.jwtService.sign(payload);
+
+        // 생성된 토큰으로 이메일 인증링크 보내기
+        this.sendVerificationEmail(accessToken);
+
         return { accessToken };
     }
 
-    async updateUser(id: number, email: string, password: string, nickname: string): Promise<UpdateResult> {
+    // 이것도 수정하기
+    async updateUser(id: number, email: string, password: string, nickName: string): Promise<UpdateResult> {
         const updateResult = await this.authRepository.update(
             id,
             {
                 email: email,
                 password: password,
-                nickname: nickname
+                nickName: nickName
             }
         );
 
