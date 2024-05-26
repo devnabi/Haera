@@ -1,9 +1,6 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
-  transpileDependencies: true
-})
-
-module.exports = {
+  transpileDependencies: true,
   // 개발 서버 설정
   devServer: {
     // 프록시 설정
@@ -15,4 +12,4 @@ module.exports = {
       }
     }
   }
-}
+})
