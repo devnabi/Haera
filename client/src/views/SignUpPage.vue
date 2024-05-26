@@ -17,9 +17,6 @@
             <div class="input-group">
               <input type="email" v-model="email" class="form-control form-control-lg" id="exampleInputEmail1"
                 aria-describedby="emailHelp" placeholder="Haera@example.com">
-              <button @click="sendVerificationEmail(), emailVerification()" class="btn btn-secondary btn-sm" type="button"
-                id="button-addon2">Email
-                Verification</button>
             </div>
           </div>
 
@@ -35,10 +32,10 @@
 
           <!-- 비밀번호가 위의 것과 다르면 문구로 보여주기 -->
           <div class="row justify-content-center">
-            <label for="exampleInputPassword1" class="col-form-label col-form-label-lg mt-4">Check Password</label>
+            <label for="exampleInputPassword1" class="col-form-label col-form-label-lg mt-4">Confirm Password</label>
             <div class="input-group">
-              <input type="password" v-model="checkPassword" class="form-control form-control-lg"
-                id="exampleInputPassword1" placeholder="Check Password" autocomplete="off">
+              <input type="password" v-model="confirmPassword" class="form-control form-control-lg"
+                id="exampleInputPassword1" placeholder="Confirm Password" autocomplete="off">
             </div>
           </div>
 
@@ -53,8 +50,7 @@
             </div>
           </div>
 
-          <!-- @click="signUp" -->
-          <button type="submit" class="btn btn-primary btn-lg my-5">Sign Up!</button>
+          <button type="submit" @click.prevent="signUp" class="btn btn-primary btn-lg my-5">Sign Up!</button>
 
         </div>
       </fieldset>
@@ -73,49 +69,12 @@ export default {
     return {
       email: "",
       password: "",
-      checkPassword: "",
+      confirmPassword: "",
       nickName: ""
     }
   },
 
   methods: {
-    async sendVerificationEmail() {
-      // 이메일 인증이 되었으면 알림이 떠야함
-      try {
-          const response = await axios.post("/auth/verifyEmail", {
-            email: this.email
-          });
-          console.log("이메일 인증 여부: ", response.status);
-
-      } catch (error) {
-        console.log("error", error);
-      }
-    },
-
-    async emailVerification() {
-      // 이메일 존재 여부 확인 요청
-      // 존재하면 이미 존재한다고 알림
-      try {
-        const response = await axios.get("/auth/checkEmail", {
-          params: {
-            email: this.email
-          }
-        });
-        console.log("이메일 존재 여부: ", response.data);
-
-        if (response.data) {
-          console.log("이미 사용중인 이메일입니다.");
-        }
-
-      } catch (error) {
-        if (error.response && error.response.status === 409) {
-          console.log("error: 이미 사용중인 이메일입니다.", error);
-        } else {
-          console.log("error", error);
-        }
-      }
-    },
-
     async checkAvailability() {
       //닉네임 중복 체크 요청
       // 닉네임이 중복되면 중복됐다는 알림
@@ -124,22 +83,33 @@ export default {
           params: {
             nickName: this.nickName
           }
-      });
-      console.log("닉네임 중복 여부: ", response.data);
+        });
+        console.log("닉네임 중복 여부: ", response.data);
       } catch (error) {
         console.log("error", error);
       }
     },
 
-    signUp() {
-      // 회원가입이 성공했으면 알림창 띄어주고 로그인 화면으로 ㄱㄱ
-      axios.post("http://localhost:3000/auth/signUp", {
+    async signUp() {
+      const authCredentialsDto = {
         email: this.email,
         password: this.password,
-        checkPassword: this.checkPassword,
+        confirmPassword: this.confirmPassword,
         nickName: this.nickName
-      });
-    }
+      };
+      
+      if (this.password === this.confirmPassword) {
+        try {
+          const response = await axios.post("/auth/signUp", authCredentialsDto);
+          console.log("회원가입 성공 여부: ", response.data);
+          this.$router.push({ path: '/', query: { registered: true } });
+        } catch (error) {
+          console.log("error", error);
+        }
+      } else {
+        console.log("비밀번호가 일치하지 않습니다.");
+      }
+    },
   }
 
 }
