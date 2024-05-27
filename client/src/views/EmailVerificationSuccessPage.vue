@@ -11,9 +11,26 @@
     
 <script>
 import axios from 'axios';
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
 
 export default {
   name: 'EmailVerificationSuccessPage',
+
+  setup() {
+
+    const notify = () => {
+      toast("이메일이 인증되었습니다!", {
+        autoClose: 3000,
+        position: "bottom-right",
+        theme: "dark",
+        type: "success",
+        transition: "bounce",
+        closeOnClick: true,
+      });
+    }
+    return { notify };
+  },
 
   async created() {
     // URL에서 토큰 추출
@@ -27,6 +44,7 @@ export default {
         }
       });
       console.log("response", response.data);
+      this.notify();
 
     } catch (error) {
       console.log("error", error);
