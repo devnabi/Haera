@@ -152,7 +152,7 @@ export class AuthService {
         // 사용자 데이터를 가져와서 비교
         const user = await this.authRepository.findOneBy({ id });
 
-        // 요청한 현재 비번과 기존 DB에 있는 비번이 일치하는지 확인
+        // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
@@ -166,7 +166,7 @@ export class AuthService {
         }
 
         // 본인의 닉네임을 변경하지 않고 그대로 보낼 경우는 어떻게 처리?
-        // -> 비번만 바꾸려고 했는데 이미 등록됐다고 에러를 던지면 닉넴도 강제로 변경해야 된다는 뜻이 됨...
+        // -> 비번만 바꾸려고 했는데 이미 등록됐다고 에러를 던지면 닉넴까지 강제로 변경해야 된다는 뜻이 됨...
         if ( (nickName) && (nickName !== user.nickName) && (nickName.trim().length > 0)) {
             // 요청한 닉네임 중복 확인
             const nickNameExists = await this.getNickNameExistence(nickName);
@@ -177,8 +177,16 @@ export class AuthService {
         }
     }
 
-    async deleteUser(id: number): Promise<DeleteResult> {
+    async deleteUser(id: number, password: string): Promise<DeleteResult> {
+        // 유저 정보를 가져오고
+        const user = await this.authRepository.findOneBy({ id });
+        // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
+        }
         const deleteResult = await this.authRepository.delete(id);
+
         return deleteResult;
     }
 }
