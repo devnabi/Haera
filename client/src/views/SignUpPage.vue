@@ -77,7 +77,6 @@ export default {
   methods: {
     async checkAvailability() {
       //닉네임 중복 체크 요청
-      // 닉네임이 중복되면 중복됐다는 알림
       try {
         const response = await axios.get("/auth/checkNickName", {
           params: {
@@ -102,6 +101,9 @@ export default {
         try {
           const response = await axios.post("/auth/signUp", authCredentialsDto);
           console.log("회원가입 성공 여부: ", response.data);
+          const { accessToken } = response.data;
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("isSignedIn", "true");
           this.$router.push({ path: '/', query: { registered: true } });
         } catch (error) {
           console.log("error", error);

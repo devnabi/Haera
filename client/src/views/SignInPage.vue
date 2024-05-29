@@ -73,14 +73,15 @@ export default {
       const authCredentialsDto = {
         email: this.email,
         password: this.password,
-        confirmPassword: this.confirmPassword,
-        nickName: this.nickName
       };
 
       try {
         const response = await axios.post("/auth/signIn", authCredentialsDto);
         console.log("response", response.status);
-        this.$router.push({ path: "/" });
+        const { accessToken } = response.data;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("isSignedIn", "true");
+        this.$router.push({ path: "/", query: { notify: "success" } });
 
       } catch (error) {
         console.log("error", error);
