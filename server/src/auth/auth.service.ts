@@ -45,7 +45,12 @@ export class AuthService {
         return nickNameCheckResult;
     }
 
-    async sendVerificationEmail(token: string) {
+    async getUserById(id: number): Promise<User> {
+        const user = await this.authRepository.findOneBy({ id });
+        return user;
+    }
+
+    async sendVerificationEmail(token: string): Promise<void> {
         // 가입 성공 시 생성된 토큰에서 페이로드 추출
         const payload = this.jwtService.verify(token);
 
@@ -65,7 +70,7 @@ export class AuthService {
     }
 
     // 토큰이 일치하는지 확인
-    async verifyTokenAndSaveEmail(token: string) {
+    verifyTokenAndSaveEmail(token: string): string {
         const payload = this.jwtService.verify(token);
         const email = payload.email;
 
@@ -73,7 +78,7 @@ export class AuthService {
     }
 
     // Token으로 인증된 이메일의 상태를 업데이트
-    async updateEmailVerificationStatus(email: string) {
+    async updateEmailVerificationStatus(email: string): Promise<UpdateResult> {
         const updateResult = await this.authRepository.update(
             { email },
             { isEmailVerified: true }
@@ -82,8 +87,12 @@ export class AuthService {
         return updateResult;
     }
 
-    async getUserById(id: number): Promise<User> {
-        const user = await this.authRepository.findOneBy({ id });
+    // accessToken을 검증하여 사용자 정보를 가져오는 메서드
+    async getValidateUser(accessToken: string): Promise<User> {
+        const payload = this.jwtService.verify(accessToken);
+        const { email } = payload;
+        const user = await this.authRepository.findOneBy({ email });
+
         return user;
     }
 
@@ -102,20 +111,17 @@ export class AuthService {
         // 로그인 성공 시 JWT토큰 생성 (Payload + Secret)
         const payload = { email };
         const accessToken = this.jwtService.sign(payload);
+
         return { accessToken };
     }
 
     async signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const { email, password, nickName } = authCredentialsDto;
-        // 이메일이 DB에 존재하는지 확인
         const emailExists = await this.authRepository.existsBy({ email });
-
-        // 요청한 이메일이 이미 존재할 경우에만 이 유저의 상태 확인
         if (emailExists) {
             throw new UnauthorizedException("이미 등록된 이메일입니다.");
         }
 
-        // 닉네임 중복 확인
         const nickNameExists = await this.getNickNameExistence(nickName);
         if (nickNameExists) {
             throw new UnauthorizedException("이미 등록된 닉네임입니다.");
@@ -141,18 +147,34 @@ export class AuthService {
         return { accessToken };
     }
 
-    // 이것도 수정하기
-    async updateUser(id: number, email: string, password: string, nickName: string): Promise<UpdateResult> {
-        const updateResult = await this.authRepository.update(
-            id,
-            {
-                email: email,
-                password: password,
-                nickName: nickName
-            }
-        );
+    async updateUser(id: number, authCredentialsDto: AuthCredentialsDto, newPassword: string): Promise<void> {
+        const { password, nickName } = authCredentialsDto;
+        // 사용자 데이터를 가져와서 비교
+        const user = await this.authRepository.findOneBy({ id });
 
-        return updateResult;
+        // 요청한 현재 비번과 기존 DB에 있는 비번이 일치하는지 확인
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
+        }
+
+        // 새로운 비번이 있다면 해싱하여 저장
+        if (newPassword && newPassword.trim().length >= 8) {
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+            await this.authRepository.update(id, { password: hashedPassword });
+        }
+
+        // 본인의 닉네임을 변경하지 않고 그대로 보낼 경우는 어떻게 처리?
+        // -> 비번만 바꾸려고 했는데 이미 등록됐다고 에러를 던지면 닉넴도 강제로 변경해야 된다는 뜻이 됨...
+        if ( (nickName) && (nickName !== user.nickName) && (nickName.trim().length > 0)) {
+            // 요청한 닉네임 중복 확인
+            const nickNameExists = await this.getNickNameExistence(nickName);
+            if (nickNameExists) {
+                throw new UnauthorizedException("이미 등록된 닉네임입니다.");
+            }
+            await this.authRepository.update(id, { nickName: nickName });
+        }
     }
 
     async deleteUser(id: number): Promise<DeleteResult> {
