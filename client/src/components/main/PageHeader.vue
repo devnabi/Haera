@@ -6,9 +6,9 @@
         aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-    <div class="col-1 d-flex justify-content-between"> <!-- 수평 정렬을 위한 부분 -->
-      <button v-if="!isSignedIn" @click="goToSignIn" type="button" class="btn btn-outline-dark px-3 pt-2">Sign In</button>
-      <button v-else @click="signOut" type="button" class="btn btn-outline-dark px-3 pt-2">Sign Out</button>
+    <div class="col-1 d-flex justify-content-end"> <!-- 수평 정렬을 위한 부분 -->
+      <button v-if="!isSignedIn" @click="goToSignIn" type="button" class="btn btn-outline-dark px-3 pt-2 me-3">Sign In</button>
+      <button v-else @click="signOut" type="button" class="btn btn-outline-dark px-3 pt-2 me-3">Sign Out</button>
       <button v-if="isSignedIn" @click="goToMyProfileUpdate" class="btn btn-dark btn-sm">⚙️</button>
     </div>
 

@@ -3,6 +3,7 @@ import Main from '@/views/MainPage.vue';
 import Error from '@/views/ErrorPage';
 import SignIn from '@/views/SignInPage';
 import SignUp from '@/views/SignUpPage.vue';
+import MyList from '@/views/MyList.vue';
 import MyProfileUpdate from '@/views/MyProfileUpdatePage.vue';
 import FindPassword from '@/views/FindPassword.vue';
 import LeaveCheck from '@/views/LeaveCheck.vue';
@@ -31,6 +32,11 @@ const router = createRouter({
       path: '/signup',
       name: 'SignUpPage',
       component: SignUp
+    },
+    {
+      path: '/mylist',
+      name: 'MyList',
+      component: MyList
     },
     {
       path: '/myprofileupdate',

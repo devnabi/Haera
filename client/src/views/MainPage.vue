@@ -1,4 +1,7 @@
 <template>
+  <div class="position-sticky end-0">
+    <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg py-3">Create To-Do List</button>
+  </div>
   <div class="container py-5 h-100">
     <div class="row justify-content-center">
 
@@ -65,7 +68,6 @@
                       </div>
                     </ul>
                   </div>
-
 
                   <!-- Tabs content -->
                   <div class="tab-content" id="ex1-content">
@@ -165,6 +167,12 @@ import "vue3-toastify/dist/index.css";
 export default {
   name: 'MainPage',
 
+  computed: {
+    isSignedIn() {
+      return localStorage.getItem("isSignedIn") == "true";
+    }
+  },
+
   setup() {
     const showEmailVerificationToast = () => {
       toast("이메일 인증 링크를 보냈습니다! \n계정을 유지하려면 7일 이내로 인증을 완료하세요.", {
@@ -182,7 +190,7 @@ export default {
 
     const showSignInSuccessToast = () => {
       toast("로그인 성공!", {
-        autoClose: 3000,
+        autoClose: 2000,
         position: "bottom-right",
         theme: "dark",
         type: "success",
@@ -190,7 +198,19 @@ export default {
         closeOnClick: true,
       });
     }
-    return { showEmailVerificationToast, showSignInSuccessToast };
+
+    const requireSignIn = (callback) => {
+      toast("로그인을 하셔야 접근이 가능합니다.", {
+        autoClose: 3000,
+        position: "top-center",
+        theme: "dark",
+        type: "info",
+        transition: "bounce",
+        closeOnClick: true,
+        onClose: callback, // 토스트가 닫힐 때 실행될 콜백 함수
+      });
+    }
+    return { showEmailVerificationToast, showSignInSuccessToast, requireSignIn };
   },
 
   mounted() {
@@ -204,5 +224,17 @@ export default {
       this.showSignInSuccessToast();
     }
   },
+
+  methods: {
+    goToMyList() {
+      if (this.isSignedIn) {
+        this.$router.push("/mylist");
+      } else {
+        this.requireSignIn(() => {
+          this.$router.push("/signin");
+        });
+      }
+    }
+  }
 }
 </script>

@@ -2,7 +2,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Sofia">
     <div id="app">
       <PageHeader></PageHeader>
-      <!-- <MyList></MyList> -->
       <router-view>
       </router-view>
       <PageFooter></PageFooter>
@@ -12,14 +11,12 @@
 <script>
 import PageHeader from '@/components/main/PageHeader.vue';
 import PageFooter from '@/components/main/PageFooter.vue';
-// import MyList from './components/my/MyList.vue';
 
 export default {
   name: 'App',
   components: {
     PageHeader,
-    PageFooter,
-    // MyList
+    PageFooter
   }
 }
 </script>
