@@ -2,7 +2,7 @@
     <div class="container py-5 h-100">
         <div class="row justify-content-center">
 
-            <h1 class="text-primary" style="font-family: 'Sofia';">{{ userNickName }}'s List!🪄</h1>
+            <h1 class="text-primary" style="font-family: 'Sofia';">{{ nickName }}'s List!🪄</h1>
 
             <section class="vh-100 gradient-custom mt-3">
                 <div class="container">
@@ -13,11 +13,9 @@
                                 <div class="card-body py-4">
 
                                     <form class="d-flex mt-4">
-                                        <input class="form-control border-info me-2" type="search"
+                                        <input class="form-control border-info me-2" type="search" v-model="search"
                                             placeholder="Search keyword...">
                                         <button class="btn btn-primary btn-lg my-2 my-sm-0" type="submit">Search</button>
-                                        <!-- <input class="form-control border-info me-sm-2" type="text" placeholder="New task...">
-                    <button class="btn btn-secondary btn-lg my-2 my-sm-0" type="submit">➕Add</button> -->
                                     </form>
 
                                     &nbsp;
@@ -40,7 +38,7 @@
                                                     aria-selected="false">Completed</a>
                                             </li>
                                             <div class="d-flex position-absolute end-0 mb-2 me-3">
-                                                <input class="form-control border-info me-2" type="text"
+                                                <input class="form-control border-info me-2" type="text" v-model="add"
                                                     placeholder="New task...">
                                                 <button class="btn btn-secondary btn-lg" type="button">➕Add</button>
                                             </div>
@@ -52,9 +50,10 @@
                                         <div class="tab-pane fade show active" id="ex1-tabs-1" role="tabpanel"
                                             aria-labelledby="ex1-tab-1">
                                             <ul class="list-group mb-0">
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
+                                                <li v-for="(listItem, i) in listItems" :key="i" v-bind:listItem="listItem"
+                                                    class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
                                                     style="background-color: #f4f6f0;">
-                                                    <s>Cras justo odio</s>
+                                                    {{ listItem.todo_text }}
                                                     <div class="position-absolute end-0">
                                                         <button class="btn btn-outline-dark btn-sm me-2"
                                                             type="button">✏️</button>
@@ -76,34 +75,7 @@
                                                 </li>
                                             </ul>
                                         </div>
-                                        <div class="tab-pane fade" id="ex1-tabs-2" role="tabpanel"
-                                            aria-labelledby="ex1-tab-2">
-                                            <ul class="list-group mb-0">
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    Porta ac consectetur ac
-                                                </li>
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-0 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    Vestibulum at eros
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="tab-pane fade" id="ex1-tabs-3" role="tabpanel"
-                                            aria-labelledby="ex1-tab-3">
-                                            <ul class="list-group mb-0">
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    <s>Cras justo odio</s>
-                                                </li>
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    <s>Dapibus ac facilisis in</s>
-                                                </li>
-                                            </ul>
-                                        </div>
                                     </div>
-
 
                                     <!-- pagination -->
                                     <div class="row d-flex justify-content-center mt-5">
@@ -144,11 +116,47 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'MyList',
+
     data() {
         return {
-            userNickName: 'H' // 임시 데이터
+            nickName: "",
+            token: "",
+            search: "",
+            add: "",
+            listItems: []
+        }
+    },
+
+    async mounted() {
+        // 토큰을 통해 사용자를 찾기, 그 사용자의 닉네임을 바인딩
+        this.token = localStorage.getItem("accessToken");
+        try {
+            const response = await axios.get(`/auth/getValidateUser/${this.token}`);
+            this.nickName = response.data.nickName;
+            console.log("response", response.data.nickName);
+            // 마이리스트 페이지에 들어오면 항상 all로 조회
+            this.getAllListItem();
+        } catch (error) {
+            console.log("error", error);
+        }
+    },
+
+    methods: {
+        async getAllListItem() {
+            try {
+                const response = await axios.get("/lists/item", {
+                    headers: {
+                        Authorization: `Bearer ${this.token}`
+                    }
+                });
+                this.listItems = response.data;
+            } catch (error) {
+                console.log("error", error);
+            }
         }
     }
 }
