@@ -96,7 +96,7 @@ export default {
         confirmPassword: this.confirmPassword,
         nickName: this.nickName
       };
-      
+
       if (this.password === this.confirmPassword) {
         try {
           const response = await axios.post("/auth/signUp", authCredentialsDto);
@@ -104,6 +104,7 @@ export default {
           const { accessToken } = response.data;
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("isSignedIn", "true");
+          this.createList();
           this.$router.push({ path: '/', query: { registered: true } });
         } catch (error) {
           console.log("error", error);
@@ -112,6 +113,20 @@ export default {
         console.log("비밀번호가 일치하지 않습니다.");
       }
     },
+
+    async createList() {
+      const token = localStorage.getItem("accessToken");
+      try {
+        const response = await axios.post("/lists", null, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        console.log("response", response.data);
+      } catch (error) {
+        console.log("error", error);
+      }
+    }
   }
 
 }
