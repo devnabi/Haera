@@ -23,24 +23,25 @@
                                     <!-- Tabs navs -->
                                     <div class="d-flex">
                                         <ul class="nav nav-tabs mt-2 mb-2 pb-2" id="ex1" role="tablist">
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link active" id="ex1-tab-1" data-mdb-tab-init
-                                                    href="#ex1-tabs-1" role="tab" aria-controls="ex1-tabs-1"
-                                                    aria-selected="true">All</a>
+                                            <li @click="getAllListItem" class="nav-item" role="presentation">
+                                                <a class="nav-link active" id="ex1-tab-2" data-mdb-tab-init
+                                                    href="#ex1-tabs-2" role="tab" aria-controls="ex1-tabs-2"
+                                                    aria-selected="false">All</a>
                                             </li>
-                                            <li class="nav-item" role="presentation">
+                                            <li @click="getActiveListItems" class="nav-item" role="presentation">
                                                 <a class="nav-link" id="ex1-tab-2" data-mdb-tab-init href="#ex1-tabs-2"
                                                     role="tab" aria-controls="ex1-tabs-2" aria-selected="false">Active</a>
                                             </li>
-                                            <li class="nav-item" role="presentation">
+                                            <li @click="getCompletedListItems" class="nav-item" role="presentation">
                                                 <a class="nav-link" id="ex1-tab-3" data-mdb-tab-init href="#ex1-tabs-3"
                                                     role="tab" aria-controls="ex1-tabs-3"
                                                     aria-selected="false">Completed</a>
                                             </li>
                                             <div class="d-flex position-absolute end-0 mb-2 me-3">
-                                                <input class="form-control border-info me-2" type="text" v-model="add"
+                                                <input class="form-control border-info me-2" type="text" v-model="todo_text"
                                                     placeholder="New task...">
-                                                <button class="btn btn-secondary btn-lg" type="button">➕Add</button>
+                                                <button @click="createListItem" class="btn btn-secondary btn-lg"
+                                                    type="button">➕Add</button>
                                             </div>
                                         </ul>
                                     </div>
@@ -60,18 +61,6 @@
                                                         <button class="btn btn-outline-danger btn-sm me-2"
                                                             type="button">❌</button>
                                                     </div>
-                                                </li>
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    <s>Dapibus ac facilisis in</s>
-                                                </li>
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    Porta ac consectetur ac
-                                                </li>
-                                                <li class="list-group-item d-flex align-items-center border-0 mb-0 rounded"
-                                                    style="background-color: #f4f6f0;">
-                                                    Vestibulum at eros
                                                 </li>
                                             </ul>
                                         </div>
@@ -127,6 +116,7 @@ export default {
             token: "",
             search: "",
             add: "",
+            todo_text: "",
             listItems: []
         }
     },
@@ -156,6 +146,52 @@ export default {
                 this.listItems = response.data;
             } catch (error) {
                 console.log("error", error);
+            }
+        },
+
+        async getActiveListItems() {
+            try {
+                const response = await axios.get("/lists/item/active", {
+                    headers: {
+                        Authorization: `Bearer ${this.token}`
+                    }
+                });
+                this.listItems = response.data;
+            } catch (error) {
+                console.log("error", error);
+            }
+        },
+
+        async getCompletedListItems() {
+            try {
+                const response = await axios.get("/lists/item/completed", {
+                    headers: {
+                        Authorization: `Bearer ${this.token}`
+                    }
+                });
+                this.listItems = response.data;
+            } catch (error) {
+                console.log("error", error);
+            }
+        },
+
+        async createListItem() {
+            const createListItemDto = {
+                todo_text: this.todo_text
+            }
+            if (this.todo_text) {
+                try {
+                    const response = await axios.post("/lists/item", createListItemDto, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    });
+                    console.log("response", response);
+                } catch (error) {
+                    console.log("error", error);
+                }
+            } else {
+                console.log("입력하셔야 합니다.");
             }
         }
     }
