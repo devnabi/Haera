@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     ) {
         super({
             // 가져온 Token이 유효한지 체크
-            secretOrKey: "secret",
+            secretOrKey: process.env.JWT_SECRET,
             //AuthHeader로 부터 온 BearerToken을 가져옴
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false
