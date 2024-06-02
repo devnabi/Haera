@@ -2,7 +2,7 @@
     <div class="container py-5 h-100">
         <div class="row justify-content-center">
 
-            <h1 class="text-primary" style="font-family: 'Sofia';">{{ nickName }}'s List!🪄</h1>
+            <h1 class="text-primary" style="font-family: 'Sofia';">{{ nickName }}'s List🪄</h1>
 
             <section class="vh-100 gradient-custom mt-3">
                 <div class="container">
@@ -56,19 +56,22 @@
                                             <ul class="list-group mb-0">
                                                 <li @dblclick="updateListItemStatus(listItem.id, listItem.status)"
                                                     v-for="(listItem, i) in listItems" :key="i" v-bind:listItem="listItem"
+                                                    @mouseover="applyHoverStyles(i)" @mouseleave="removeHoverStyles(i)"
                                                     class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
-                                                    style="background-color: #f4f6f0;">
+                                                    :style="[listItem.hoverStyles, { 'background-color': listItem.isHovered ? '#ddf4d4' : '#f4f6f0' }]">
                                                     <div v-if="listItem.status">
                                                         <s><i>{{ listItem.todo_text }}</i></s>
                                                     </div>
                                                     <div v-else>
                                                         {{ listItem.todo_text }}
                                                     </div>
-                                                    <div class="position-absolute end-0">
+                                                    <div v-show="listItem.isHovered" class="position-absolute end-0">
+                                                        <!-- <form> -->
                                                         <button class="btn btn-outline-dark btn-sm me-2"
-                                                            type="button">✏️</button>
-                                                        <button class="btn btn-outline-danger btn-sm me-2"
-                                                            type="button">❌</button>
+                                                            type="submit">✏️</button>
+                                                        <!-- </form> -->
+                                                        <button class="btn btn-outline-danger btn-sm me-2" type="button"
+                                                            @click="deleteListItem(listItem.id)">❌</button>
                                                     </div>
                                                 </li>
                                             </ul>
@@ -115,6 +118,8 @@
 
 <script>
 import axios from 'axios';
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
 
 export default {
     name: 'MyList',
@@ -127,8 +132,34 @@ export default {
             add: "",
             todo_text: "",
             status: "",
-            listItems: []
+            listItems: [],
+            isHovered: true
         }
+    },
+
+    setup() {
+        const keywordPromptToast = () => {
+            toast("키워드를 입력하세요.", {
+                autoClose: 1000,
+                position: "bottom-right",
+                theme: "dark",
+                type: "info",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+
+        const nonexistentKeywordToast = () => {
+            toast("존재하지 않는 키워드입니다.", {
+                autoClose: 1000,
+                position: "bottom-right",
+                theme: "dark",
+                type: "warning",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+        return { keywordPromptToast, nonexistentKeywordToast };
     },
 
     async mounted() {
@@ -146,6 +177,21 @@ export default {
     },
 
     methods: {
+        applyHoverStyles(i) {
+            this.listItems[i].isHovered = true;
+            this.listItems[i].hoverStyles = {
+                cursor: "pointer",
+                backgroundColor: "#ddf4d4"
+            };
+        },
+        removeHoverStyles(i) {
+            this.listItems[i].isHovered = false;
+            this.listItems[i].hoverStyles = {
+                cursor: "default",
+                backgroundColor: "#f4f6f0"
+            };
+        },
+
         async getAllListItem() {
             try {
                 const response = await axios.get("/lists/item", {
@@ -194,12 +240,15 @@ export default {
                         }
                     });
                     this.listItems = response.data;
+                    if (this.listItems.length == 0) {
+                        this.nonexistentKeywordToast();
+                    }
                     console.log("keyword: ", response.data);
                 } catch (error) {
                     console.log("error", error);
                 }
             } else {
-                console.log("키워드를 입력해주세요.");
+                this.keywordPromptToast();
             }
         },
 
@@ -224,17 +273,49 @@ export default {
             }
         },
 
-        async updateListItemStatus(id, status) {
+        async updateListItem(id) {
             try {
-                const response = await axios.patch(`/lists/item/updateStatus/${id}`,
-                    { status: status },
+                const response = await axios.patch(`/lists/item/update/${id}`,
+                    { todo_text: this.todo_text },
                     {
                         headers: {
                             Authorization: `Bearer ${this.token}`
                         }
-                    });
-                window.location.reload();
+                    }
+                );
                 console.log("response", response.data);
+            } catch (error) {
+                console.log("error", error);
+            }
+        },
+
+        // async updateListItemStatus(id, status) {
+        //     try {
+        //         const response = await axios.patch(`/lists/item/updateStatus/${id}`,
+        //             { status: status },
+        //             {
+        //                 headers: {
+        //                     Authorization: `Bearer ${this.token}`
+        //                 }
+        //             });
+        //         window.location.reload();
+        //         console.log("response", response.data);
+        //     } catch (error) {
+        //         console.log("error", error);
+        //     }
+        // },
+
+        async deleteListItem(id) {
+            try {
+                const response = await axios.delete(`/lists/item/delete/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    }
+                );
+                window.location.reload();
+                console.log("response", response.status);
             } catch (error) {
                 console.log("error", error);
             }
