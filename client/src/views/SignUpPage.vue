@@ -105,7 +105,8 @@ export default {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("isSignedIn", "true");
           this.createList();
-          this.$router.push({ path: '/', query: { registered: true } });
+          await this.$router.push({ path: '/', query: { registered: true } });
+          window.location.reload();
         } catch (error) {
           console.log("error", error);
         }

@@ -53,7 +53,8 @@
                         <div class="input-group">
                             <input type="text" v-model="userData.nickName" class="form-control form-control-lg"
                                 placeholder="Nick Name" aria-label="Recipient's username" aria-describedby="button-addon2">
-                            <button class="btn btn-secondary btn-sm" @click="checkAvailability" type="button" id="button-addon2">Check
+                            <button class="btn btn-secondary btn-sm" @click="checkAvailability" type="button"
+                                id="button-addon2">Check
                                 Availability</button>
                         </div>
                     </div>
@@ -97,7 +98,7 @@ export default {
     setup() {
         const requireSignIn = (callback) => {
             toast("로그인을 하셔야 접근이 가능합니다.", {
-                autoClose: 3000,
+                autoClose: 2000,
                 position: "top-center",
                 theme: "dark",
                 type: "warning",

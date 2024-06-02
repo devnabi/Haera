@@ -190,8 +190,8 @@ export default {
 
     const showSignInSuccessToast = () => {
       toast("로그인 성공!", {
-        autoClose: 2000,
-        position: "bottom-right",
+        autoClose: 1000,
+        position: "top-center",
         theme: "dark",
         type: "success",
         transition: "bounce",
@@ -201,10 +201,10 @@ export default {
 
     const requireSignIn = (callback) => {
       toast("로그인을 하셔야 접근이 가능합니다.", {
-        autoClose: 3000,
+        autoClose: 2000,
         position: "top-center",
         theme: "dark",
-        type: "info",
+        type: "warning",
         transition: "bounce",
         closeOnClick: true,
         onClose: callback, // 토스트가 닫힐 때 실행될 콜백 함수
