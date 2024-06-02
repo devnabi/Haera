@@ -65,7 +65,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" @click.prevent="profileUpdate"
+                    <button type="submit" @click.prevent="updateProfile"
                         class="btn btn-primary btn-lg btn-block my-5">Save</button>
                     <button type="submit" @click="cancel"
                         class="btn btn-outline-secondary btn-lg btn-block mx-2 my-5">Cancel</button>
@@ -107,7 +107,18 @@ export default {
                 onClose: callback, // 토스트가 닫힐 때 실행될 콜백 함수
             });
         }
-        return { requireSignIn };
+
+        const updateSuccessToast = () => {
+            toast("업데이트 성공!", {
+                autoClose: 2000,
+                position: "top-center",
+                theme: "dark",
+                type: "success",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+        return { requireSignIn, updateSuccessToast };
     },
 
     async mounted() {
@@ -150,7 +161,7 @@ export default {
             }
         },
 
-        async profileUpdate() {
+        async updateProfile() {
             // 사용자의 id 추출
             const { id } = this.userData;
 
@@ -164,6 +175,7 @@ export default {
             if (this.newPassword === this.confirmPassword) {
                 try {
                     const response = await axios.patch(`/auth/update/${id}`, authCredentialsDto);
+                    this.updateSuccessToast();
                     console.log("response", response);
                 } catch (error) {
                     console.log("error", error);
