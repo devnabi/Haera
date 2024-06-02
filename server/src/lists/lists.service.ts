@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InquiryStatus } from "./list-inquiryStatus.enum";
 import { CreateListItemDto } from './dto/create-listItem.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,16 +11,16 @@ import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
 export class ListsService {
     constructor(
         @InjectRepository(List)
-        private listRepository : Repository<List>,
+        private listRepository: Repository<List>,
         @InjectRepository(ListItem)
-        private listItemRepository : Repository<ListItem>
-    ) {}
+        private listItemRepository: Repository<ListItem>
+    ) { }
 
     async getAllList(user: User): Promise<List[]> {
         const lists = await this.listRepository.findBy({ user_id: user.id });
         return lists;
     }
-    
+
     async getAllListItem(user: User): Promise<ListItem[]> {
         const list = await this.listRepository.findOneBy({ user_id: user.id });
         const allListItem = await this.listItemRepository.findBy({ list_id: list.id });
@@ -53,6 +53,9 @@ export class ListsService {
             todo_text: Like(`%${keyword}%`),
             list_id: list.id
         });
+        if (listItems.length == 0) {
+            throw new NotFoundException(`'${keyword}': 존재하지 않는 키워드`);
+        }
 
         return listItems;
     }
@@ -68,7 +71,7 @@ export class ListsService {
 
     async createList(user: User): Promise<List> {
         const list = this.listRepository.create({
-            user_id : user.id,
+            user_id: user.id,
             inquiry_status: InquiryStatus.All
         })
 
@@ -88,7 +91,6 @@ export class ListsService {
     }
 
     async updateListItem(id: number, todo_text: string, status: boolean, user: User): Promise<UpdateResult> {
-        // (여기서 id가 해당 유저의 리스트에 속하는 리스트아이템 아이디인지 확인)
         const list = await this.listRepository.findOneBy({ user_id: user.id });
         const isValidListItemId = await this.listItemRepository.existsBy({
             // list_id가 list에 있는 id와 같은 것이 존재하는지 확인
@@ -99,7 +101,7 @@ export class ListsService {
         if (!isValidListItemId) {
             throw new UnauthorizedException();
         }
-        
+
         // update (업데이트)
         const updateResult = await this.listItemRepository.update(
             id,
@@ -112,8 +114,30 @@ export class ListsService {
         return updateResult;
     }
 
+    // listItem의 상태 업데이트
+    async updateListItemStatus(id: number, status: boolean, user: User): Promise<UpdateResult> {
+        const list = await this.listRepository.findOneBy({ user_id: user.id });
+        const isValidListItemId = await this.listItemRepository.existsBy({
+            list_id: list.id,
+            id
+        });
+        if (!isValidListItemId) {
+            throw new UnauthorizedException();
+        }
+
+        // 상태를 반대로 업데이트
+        const newStatus = !status;
+        const updateResult = await this.listItemRepository.update(
+            id,
+            {
+                status: newStatus
+            }
+        );
+
+        return updateResult;
+    }
+
     async deleteListItem(id: number, user: User): Promise<DeleteResult> {
-        // (여기서 id가 해당 유저의 리스트에 속하는 리스트아이템 아이디인지 확인)
         const list = await this.listRepository.findOneBy({ user_id: user.id });
         const isValidListItemId = await this.listItemRepository.existsBy({
             list_id: list.id,

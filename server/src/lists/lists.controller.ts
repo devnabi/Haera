@@ -35,9 +35,9 @@ export class ListsController {
         return this.listsService.getCompletedListItems(user);
     }
 
-    @Get('/item/search')
+    @Get('/item/search/:keyword')
     getListItemsByKeyword(
-        @Query('keyword') keyword: string,
+        @Param('keyword') keyword: string,
         @Request() req
     ): Promise<ListItem[]> {
         const user = req.user;
@@ -78,6 +78,16 @@ export class ListsController {
     ): Promise<UpdateResult> {
         const user = req.user;
         return this.listsService.updateListItem(id, todo_text, status, user);
+    }
+
+    @Patch('/item/updateStatus/:id')
+    updateListItemStatus(
+        @Param('id') id: number,
+        @Body('status') status: boolean,
+        @Request() req
+    ): Promise<UpdateResult> {
+        const user = req.user;
+        return this.listsService.updateListItemStatus(id, status, user);
     }
 
     @Delete('/item/:id')
