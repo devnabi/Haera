@@ -13,9 +13,10 @@
                                 <div class="card-body py-4">
 
                                     <form class="d-flex mt-4">
-                                        <input class="form-control border-info me-2" type="search" v-model="search"
+                                        <input class="form-control border-info me-2" type="search" v-model="keyword"
                                             placeholder="Search keyword...">
-                                        <button class="btn btn-primary btn-lg my-2 my-sm-0" type="submit">Search</button>
+                                        <button class="btn btn-primary btn-lg my-2 my-sm-0" type="submit"
+                                            @click.prevent="getListItemByKeyword">Search</button>
                                     </form>
 
                                     &nbsp;
@@ -37,12 +38,14 @@
                                                     role="tab" aria-controls="ex1-tabs-3"
                                                     aria-selected="false">Completed</a>
                                             </li>
-                                            <div class="d-flex position-absolute end-0 mb-2 me-3">
-                                                <input class="form-control border-info me-2" type="text" v-model="todo_text"
-                                                    placeholder="New task...">
-                                                <button @click="createListItem" class="btn btn-secondary btn-lg"
-                                                    type="button">➕Add</button>
-                                            </div>
+                                            <form>
+                                                <div class="d-flex position-absolute end-0 mb-2 me-3">
+                                                    <input class="form-control border-info me-2" type="text"
+                                                        v-model="todo_text" placeholder="New task...">
+                                                    <button @click.prevent="createListItem" class="btn btn-secondary btn-lg"
+                                                        type="submit">➕Add</button>
+                                                </div>
+                                            </form>
                                         </ul>
                                     </div>
 
@@ -51,10 +54,16 @@
                                         <div class="tab-pane fade show active" id="ex1-tabs-1" role="tabpanel"
                                             aria-labelledby="ex1-tab-1">
                                             <ul class="list-group mb-0">
-                                                <li v-for="(listItem, i) in listItems" :key="i" v-bind:listItem="listItem"
+                                                <li @dblclick="updateListItemStatus(listItem.id, listItem.status)"
+                                                    v-for="(listItem, i) in listItems" :key="i" v-bind:listItem="listItem"
                                                     class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
                                                     style="background-color: #f4f6f0;">
-                                                    {{ listItem.todo_text }}
+                                                    <div v-if="listItem.status">
+                                                        <s><i>{{ listItem.todo_text }}</i></s>
+                                                    </div>
+                                                    <div v-else>
+                                                        {{ listItem.todo_text }}
+                                                    </div>
                                                     <div class="position-absolute end-0">
                                                         <button class="btn btn-outline-dark btn-sm me-2"
                                                             type="button">✏️</button>
@@ -114,9 +123,10 @@ export default {
         return {
             nickName: "",
             token: "",
-            search: "",
+            keyword: "",
             add: "",
             todo_text: "",
+            status: "",
             listItems: []
         }
     },
@@ -175,6 +185,24 @@ export default {
             }
         },
 
+        async getListItemByKeyword() {
+            if (this.keyword) {
+                try {
+                    const response = await axios.get(`/lists/item/search/${this.keyword}`, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    });
+                    this.listItems = response.data;
+                    console.log("keyword: ", response.data);
+                } catch (error) {
+                    console.log("error", error);
+                }
+            } else {
+                console.log("키워드를 입력해주세요.");
+            }
+        },
+
         async createListItem() {
             const createListItemDto = {
                 todo_text: this.todo_text
@@ -186,12 +214,29 @@ export default {
                             Authorization: `Bearer ${this.token}`
                         }
                     });
+                    window.location.reload();
                     console.log("response", response);
                 } catch (error) {
                     console.log("error", error);
                 }
             } else {
                 console.log("입력하셔야 합니다.");
+            }
+        },
+
+        async updateListItemStatus(id, status) {
+            try {
+                const response = await axios.patch(`/lists/item/updateStatus/${id}`,
+                    { status: status },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    });
+                window.location.reload();
+                console.log("response", response.data);
+            } catch (error) {
+                console.log("error", error);
             }
         }
     }
