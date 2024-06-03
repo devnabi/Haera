@@ -90,7 +90,7 @@ export class ListsService {
         return this.listItemRepository.save(listItem);
     }
 
-    async updateListItem(id: number, todo_text: string, status: boolean, user: User): Promise<UpdateResult> {
+    async updateListItem(id: number, todo_text: string, user: User): Promise<UpdateResult> {
         const list = await this.listRepository.findOneBy({ user_id: user.id });
         const isValidListItemId = await this.listItemRepository.existsBy({
             // list_id가 list에 있는 id와 같은 것이 존재하는지 확인
@@ -107,7 +107,6 @@ export class ListsService {
             id,
             {
                 todo_text: todo_text,
-                status: status
             }
         );
 

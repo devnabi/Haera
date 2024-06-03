@@ -69,15 +69,14 @@ export class ListsController {
         return this.listsService.createListItem(createListItemDto, user);
     }
 
-    @Patch('/item/:id')
+    @Patch('/item/update/:id')
     updateListItem(
         @Param('id') id: number,
         @Body('todo_text') todo_text: string,
-        @Body('status') status: boolean,
         @Request() req
     ): Promise<UpdateResult> {
         const user = req.user;
-        return this.listsService.updateListItem(id, todo_text, status, user);
+        return this.listsService.updateListItem(id, todo_text, user);
     }
 
     @Patch('/item/updateStatus/:id')
@@ -90,7 +89,7 @@ export class ListsController {
         return this.listsService.updateListItemStatus(id, status, user);
     }
 
-    @Delete('/item/:id')
+    @Delete('/item/delete/:id')
     deleteListItem(
         @Param('id') id: number,
         @Request() req
