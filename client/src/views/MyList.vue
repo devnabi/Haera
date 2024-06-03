@@ -66,10 +66,8 @@
                                                         {{ listItem.todo_text }}
                                                     </div>
                                                     <div v-show="listItem.isHovered" class="position-absolute end-0">
-                                                        <!-- <form> -->
-                                                        <button class="btn btn-outline-dark btn-sm me-2"
-                                                            type="submit">✏️</button>
-                                                        <!-- </form> -->
+                                                        <button class="btn btn-outline-dark btn-sm me-2" type="button"
+                                                            @click="updateListItem(listItem.id, i)">✏️</button>
                                                         <button class="btn btn-outline-danger btn-sm me-2" type="button"
                                                             @click="deleteListItem(listItem.id)">❌</button>
                                                     </div>
@@ -159,7 +157,29 @@ export default {
                 closeOnClick: true,
             })
         }
-        return { keywordPromptToast, nonexistentKeywordToast };
+
+        const showInputRequiredToast = () => {
+            toast("입력하셔야 합니다.", {
+                autoClose: 1000,
+                position: "bottom-right",
+                theme: "dark",
+                type: "info",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+
+        const showEditCancelledToast = () => {
+            toast("수정을 취소합니다.", {
+                autoClose: 1000,
+                position: "bottom-right",
+                theme: "dark",
+                type: "default",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+        return { keywordPromptToast, nonexistentKeywordToast, showInputRequiredToast, showEditCancelledToast };
     },
 
     async mounted() {
@@ -273,37 +293,46 @@ export default {
             }
         },
 
-        async updateListItem(id) {
+        async updateListItem(id, i) {
+            const toDoText = this.listItems[i].todo_text;
+            const promptInput = prompt("수정할 내용을 입력하세요: ", toDoText);
+            if (promptInput !== null && promptInput.trim() !== '') {
+                try {
+                    const response = await axios.patch(`/lists/item/update/${id}`,
+                        { todo_text: promptInput },
+                        {
+                            headers: {
+                                Authorization: `Bearer ${this.token}`
+                            }
+                        }
+                    );
+                    window.location.reload();
+                    console.log("response", response.data);
+                } catch (error) {
+                    console.log("error", error);
+                }
+            } else if (promptInput == "") {
+                this.showInputRequiredToast();
+            } else {
+                this.showEditCancelledToast();
+            }
+        },
+
+        async updateListItemStatus(id, status) {
             try {
-                const response = await axios.patch(`/lists/item/update/${id}`,
-                    { todo_text: this.todo_text },
+                const response = await axios.patch(`/lists/item/updateStatus/${id}`,
+                    { status: status },
                     {
                         headers: {
                             Authorization: `Bearer ${this.token}`
                         }
-                    }
-                );
+                    });
+                window.location.reload();
                 console.log("response", response.data);
             } catch (error) {
                 console.log("error", error);
             }
         },
-
-        // async updateListItemStatus(id, status) {
-        //     try {
-        //         const response = await axios.patch(`/lists/item/updateStatus/${id}`,
-        //             { status: status },
-        //             {
-        //                 headers: {
-        //                     Authorization: `Bearer ${this.token}`
-        //                 }
-        //             });
-        //         window.location.reload();
-        //         console.log("response", response.data);
-        //     } catch (error) {
-        //         console.log("error", error);
-        //     }
-        // },
 
         async deleteListItem(id) {
             try {
