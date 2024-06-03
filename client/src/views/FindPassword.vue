@@ -25,7 +25,8 @@
                         <div class="input-group">
                             <input type="email" v-model="email" class="form-control form-control-lg" id="exampleInputEmail1"
                                 aria-describedby="emailHelp" placeholder="Haera@example.com">
-                            <button @click="sendPasswordResetEmail" class="btn btn-secondary btn-sm" type="button" id="button-addon2">Request
+                            <button @click="sendPasswordResetEmail" class="btn btn-secondary btn-sm" type="button"
+                                id="button-addon2">Request
                                 Password</button>
                         </div>
                     </div>
@@ -40,6 +41,8 @@
 
 <script>
 import axios from 'axios';
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
 
 export default {
     name: 'FindPassword',
@@ -50,19 +53,38 @@ export default {
         }
     },
 
+    setup() {
+        const showInputRequiredToast = () => {
+            toast("입력하셔야 합니다.", {
+                autoClose: 1000,
+                position: "bottom-right",
+                theme: "dark",
+                type: "info",
+                transition: "bounce",
+                closeOnClick: true,
+            })
+        }
+
+        return { showInputRequiredToast }
+    },
+
     methods: {
         goToSignIn() {
             this.$router.push('/signin');
         },
 
         async sendPasswordResetEmail() {
-            try {
-                const response = await axios.post("/auth/sendPasswordResetEmail", {
-                    email: this.email
-                });
-                console.log("response", response.status);
-            } catch (error) {
-                console.log("error", error);
+            if (this.email) {
+                try {
+                    const response = await axios.post("/auth/sendPasswordResetEmail", {
+                        email: this.email
+                    });
+                    console.log("response", response.status);
+                } catch (error) {
+                    console.log("error", error);
+                }
+            } else {
+                this.showInputRequiredToast();
             }
         }
     }
