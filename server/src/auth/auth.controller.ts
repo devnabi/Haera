@@ -45,11 +45,25 @@ export class AuthController {
         return await this.authService.sendVerificationEmail(token);
     }
 
+    @Post('/sendPasswordResetEmail')
+    sendPasswordResetEmail(
+        @Body('email') email: string
+    ): Promise<void> {
+        return this.authService.sendPasswordResetEmail(email);
+    }
+
+    @Post('/generateAndSaveHashedPassword')
+    generateAndSaveHashedPassword(
+        @Query('email') email: string
+    ): Promise<UpdateResult> {
+        return this.authService.generateAndSaveHashedPassword(email);
+    }
+
     @Post('/verifyTokenAndUpdateEmailVerificationStatus')
     async verifyTokenAndUpdateEmailVerificationStatus(
         @Query('token') token: string
     ): Promise<UpdateResult> {
-        const email = await this.authService.verifyTokenAndSaveEmail(token);
+        const email = this.authService.verifyTokenAndSaveEmail(token);
         const updateResult = await this.authService.updateEmailVerificationStatus(email);
         return updateResult;
     }
