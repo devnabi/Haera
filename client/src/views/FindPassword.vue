@@ -23,15 +23,15 @@
                             class="col-form-label col-form-label-lg mt-4 custom-cursor-default-hover">Email
                             Address</label>
                         <div class="input-group">
-                            <input type="email" class="form-control form-control-lg" id="exampleInputEmail1"
+                            <input type="email" v-model="email" class="form-control form-control-lg" id="exampleInputEmail1"
                                 aria-describedby="emailHelp" placeholder="Haera@example.com">
-                            <button class="btn btn-secondary btn-sm" type="button" id="button-addon2">Request
+                            <button @click="sendPasswordResetEmail" class="btn btn-secondary btn-sm" type="button" id="button-addon2">Request
                                 Password</button>
                         </div>
                     </div>
                 </div>
 
-                <button @click="goToLogin" type="button" class="btn btn-primary btn-lg my-5 mt-5">Go to login</button>
+                <button @click="goToSignIn" type="button" class="btn btn-primary btn-lg my-5 mt-5">Go to Sign in</button>
             </fieldset>
         </form>
 
@@ -39,13 +39,32 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'FindPassword',
 
+    data() {
+        return {
+            email: ""
+        }
+    },
+
     methods: {
-        goToLogin() {
-            this.$router.push('/login');
+        goToSignIn() {
+            this.$router.push('/signin');
         },
+
+        async sendPasswordResetEmail() {
+            try {
+                const response = await axios.post("/auth/sendPasswordResetEmail", {
+                    email: this.email
+                });
+                console.log("response", response.status);
+            } catch (error) {
+                console.log("error", error);
+            }
+        }
     }
 }
 </script>
