@@ -9,6 +9,7 @@ import FindPassword from '@/views/FindPassword.vue';
 import LeaveCheck from '@/views/LeaveCheck.vue';
 import LeaveSuccess from '@/views/LeaveSuccess.vue';
 import EmailVerificationSuccess from '@/views/EmailVerificationSuccessPage.vue';
+import TemporaryPasswordCreated from '@/views/TemporaryPasswordCreated.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -62,6 +63,11 @@ const router = createRouter({
       path: '/emailverificationsuccess',
       name: 'EmailVerificationSuccessPage',
       component: EmailVerificationSuccess
+    },
+    {
+      path: '/temporarypasswordcreated',
+      name: 'TemporaryPasswordCreated',
+      component: TemporaryPasswordCreated
     },
   ]
 });
