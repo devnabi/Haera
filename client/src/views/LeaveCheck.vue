@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex vh-100 justify-content-center">
 
-        <form>
+        <form @submit.prevent="confirmLeave">
             <fieldset>
                 <div class="mt-4">
                     <h1 class="text-primary" style="font-family: 'Sofia';">Leave Check</h1>
@@ -58,7 +58,7 @@ export default {
             if (confirmation && this.password) {
                 this.leaveRequest();
             } else {
-                this.$router.push("/leavecheck");
+                console.log("취소되었습니다.");
             }
         },
 
@@ -77,14 +77,21 @@ export default {
                     }
                 });
                 console.log("deleteResponse: ", deleteResponse);
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("isSignedIn");
+                this.signOut();
                 this.$router.push("/leavesuccess");
-
             } catch (error) {
                 console.log("error", error);
             }
-        }
+        },
+
+        async signOut() {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("isSignedIn");
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1000);
+            })
+            window.location.reload();
+        },
     }
 }
 </script>
