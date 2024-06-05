@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, LessThan, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import * as bcrypt from 'bcryptjs';
@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import * as generator from 'generate-password';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class AuthService {
@@ -177,10 +178,12 @@ export class AuthService {
 
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
+        const createdAt = new Date();
         const user = this.authRepository.create({
             email,
             password: hashedPassword,
-            nickName
+            nickName,
+            created_at: createdAt
         });
 
         await this.authRepository.save(user);
@@ -236,5 +239,24 @@ export class AuthService {
         const deleteResult = await this.authRepository.delete(id);
 
         return deleteResult;
+    }
+
+    // 이메일이 인증되지 않은 유저 3일 뒤 계정 삭제
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+        timeZone: "Asia/Seoul" // 한국 기준 자정마다 실행
+    })
+    async deleteUnverifiedAccounts(): Promise<void> {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() - 3);
+
+        try {
+            const deleteResult = await this.authRepository.delete({
+                isEmailVerified: false,
+                created_at: LessThan(thresholdDate)
+            });
+            console.log("deleteResult: ", deleteResult.affected);
+        } catch (error) {
+            console.log("error", error);
+        }
     }
 }

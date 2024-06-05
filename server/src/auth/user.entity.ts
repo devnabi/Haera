@@ -11,7 +11,7 @@ export class User extends BaseEntity {
     @Column()
     email: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: false })
     password: string;
 
     @Column({ nullable: false })
@@ -19,6 +19,9 @@ export class User extends BaseEntity {
 
     @Column({ default: false })
     isEmailVerified: boolean;
+
+    @Column()
+    created_at: Date;
 
     @JoinColumn()
     @OneToOne((type) => List, (list) => list.user, { eager: true })
