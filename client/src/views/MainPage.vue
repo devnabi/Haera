@@ -23,7 +23,8 @@
       </div>
 
       <div class="position-relative mt-5">
-        <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg mt-5 py-4 px-5"><strong>Go To MyList</strong></button>
+        <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg mt-5 py-4 px-5"><strong>Go To
+            MyList</strong></button>
       </div>
 
     </div>
@@ -38,13 +39,21 @@ export default {
   name: 'MainPage',
 
   computed: {
+    isSignedUp() {
+      return localStorage.getItem("isSignedUp") == "true";
+    },
+
     isSignedIn() {
       return localStorage.getItem("isSignedIn") == "true";
+    },
+
+    isSignInSuccess() {
+      return localStorage.getItem("isSignInSuccess") == "true";
     }
   },
 
   setup() {
-    const showEmailVerificationToast = () => {
+    const showEmailVerificationToast = (callback) => {
       toast("이메일 인증 링크를 보냈습니다! \n계정을 유지하려면 3일 내로 인증을 완료하세요.", {
         autoClose: false,
         position: "bottom-right",
@@ -52,13 +61,14 @@ export default {
         type: "warning",
         transition: "bounce",
         closeOnClick: true,
+        onClose: callback,
         style: {
           whiteSpace: "pre-line", // 줄바꿈
         }
       });
     }
 
-    const showSignInSuccessToast = () => {
+    const showSignInSuccessToast = (callback) => {
       toast("로그인 성공!", {
         autoClose: 1000,
         position: "top-center",
@@ -66,6 +76,7 @@ export default {
         type: "success",
         transition: "bounce",
         closeOnClick: true,
+        onClose: callback
       });
     }
 
@@ -85,13 +96,17 @@ export default {
 
   mounted() {
     // 회원가입 성공
-    if (this.$route.query.registered) {
-      this.showEmailVerificationToast();
+    if (this.isSignedUp) {
+      this.showEmailVerificationToast(() => {
+        localStorage.removeItem("isSignedUp");
+      });
     }
 
     // 로그인 성공
-    if (this.$route.query.notify) {
-      this.showSignInSuccessToast();
+    if (this.isSignInSuccess) {
+      this.showSignInSuccessToast(() => {
+        localStorage.setItem("isSignInSuccess", "false");
+      });
     }
   },
 

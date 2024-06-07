@@ -60,6 +60,8 @@ export default {
     async signOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("isSignedIn");
+      localStorage.removeItem("isSignInSuccess");
+      localStorage.removeItem("isSignedUp");
       await this.$router.push("/");
       this.requireSignOut();
       await new Promise((resolve) => {
