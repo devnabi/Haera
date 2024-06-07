@@ -71,12 +71,10 @@ export default {
             try {
                 const getResponse = await axios.get(`/auth/getValidateUser/${this.token}`);
                 const userData = getResponse.data;
-                const deleteResponse = await axios.delete(`/auth/delete/${userData.id}`, {
-                    data: {
-                        password: this.password
-                    }
+                const updateResponse = await axios.patch(`/auth/deactivateUserAccount/${userData.id}`, {
+                    password: this.password
                 });
-                console.log("deleteResponse: ", deleteResponse);
+                console.log("updateResponse: ", updateResponse);
                 this.signOut();
                 this.$router.push("/leavesuccess");
             } catch (error) {

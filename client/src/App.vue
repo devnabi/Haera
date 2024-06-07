@@ -27,8 +27,23 @@ export default {
     }
   },
 
-  created() {
-    this.checkTokenExpiry();
+  async created() {
+    setInterval(() => {
+      if (this.isSignedIn) {
+        const token = localStorage.getItem("accessToken");
+        try {
+          const decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000; // 현재 시간
+          const expiryTime = decoded.exp; // 만료 시간
+          if (currentTime >= expiryTime) {
+            this.signOut();
+            alert("안전한 서비스 사용을 위해 자동으로 로그아웃 되었습니다. 다시 로그인 해주세요.");
+          }
+        } catch (error) {
+          this.signOut();
+        }
+      }
+    }, 60000) // 60초 마다 만료 확인
   },
 
   methods: {
@@ -41,25 +56,6 @@ export default {
       })
       window.location.reload();
     },
-
-    checkTokenExpiry() {
-      setInterval(() => {
-        if (this.isSignedIn) {
-          const token = localStorage.getItem("accessToken");
-          try {
-            const decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000; // 현재 시간
-            const expiryTime = decoded.exp; // 만료 시간
-            if (currentTime >= expiryTime) {
-              this.signOut();
-              alert("안전한 서비스 사용을 위해 자동으로 로그아웃 되었습니다. 다시 로그인 해주세요.");
-            }
-          } catch (error) {
-            this.signOut();
-          }
-        }
-      }, 60000) // 60초 마다 만료 확인
-    }
   }
 }
 </script>

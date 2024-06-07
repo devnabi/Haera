@@ -81,7 +81,7 @@ export default {
         const { accessToken } = response.data;
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("isSignedIn", "true");
-        await this.$router.push({ path: "/", query: { notify: "success" } });
+        await this.$router.push({ path: "/mylist", query: { notify: "success" } });
         window.location.reload();
       } catch (error) {
         console.log("error", error);
