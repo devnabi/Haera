@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Q
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
-import { DeleteResult, UpdateResult } from 'typeorm';
+import { UpdateResult } from 'typeorm';
 
 @Controller('auth')
 export class AuthController {
@@ -96,11 +96,11 @@ export class AuthController {
         return await this.authService.updateUser(id, authCredentialsDto, newPassword);
     }
 
-    @Delete('/delete/:id')
-    async deleteUser(
+    @Patch('/deactivateUserAccount/:id')
+    async deactivateUserAccount(
         @Param('id') id: number,
         @Body('password') password: string
-    ): Promise<DeleteResult> {
-        return await this.authService.deleteUser(id, password);
+    ): Promise<UpdateResult> {
+        return await this.authService.deactivateUserAccount(id, password);
     }
 }

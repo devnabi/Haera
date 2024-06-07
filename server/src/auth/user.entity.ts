@@ -11,10 +11,10 @@ export class User extends BaseEntity {
     @Column()
     email: string;
 
-    @Column({ nullable: false })
+    @Column()
     password: string;
 
-    @Column({ nullable: false })
+    @Column()
     nickName: string;
 
     @Column({ default: false })
@@ -22,6 +22,9 @@ export class User extends BaseEntity {
 
     @Column()
     created_at: Date;
+
+    @Column({ nullable: true })
+    deactivated_at: Date;
 
     @JoinColumn()
     @OneToOne((type) => List, (list) => list.user, { eager: true })

@@ -228,32 +228,56 @@ export class AuthService {
         }
     }
 
-    async deleteUser(id: number, password: string): Promise<DeleteResult> {
-        // 유저 정보를 가져오고
+    async deactivateUserAccount(id: number, password: string): Promise<UpdateResult> {
         const user = await this.authRepository.findOneBy({ id });
         // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
+            throw new UnauthorizedException("비밀번호가 틀립니다.");
         }
-        const deleteResult = await this.authRepository.delete(id);
+        const deactivateAt = new Date();
+        const updateResult = this.authRepository.update(
+            id,
+            {
+                deactivated_at: deactivateAt
+            });
 
-        return deleteResult;
+        return updateResult;
     }
 
-    // 이메일이 인증되지 않은 유저 3일 뒤 계정 삭제
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
-        timeZone: "Asia/Seoul" // 한국 기준 자정마다 실행
+        timeZone: "Asia/Seoul"
     })
     async deleteUnverifiedAccounts(): Promise<void> {
-        const thresholdDate = new Date();
-        thresholdDate.setDate(thresholdDate.getDate() - 3);
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
         try {
             const deleteResult = await this.authRepository.delete({
                 isEmailVerified: false,
-                created_at: LessThan(thresholdDate)
+                created_at: LessThan(threeDaysAgo)
             });
+            console.log("deleteResult: ", deleteResult.affected);
+        } catch (error) {
+            console.log("error", error);
+        }
+    }
+
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+        timeZone: "Asia/Seoul"
+    })
+    async deleteAccountIfInactiveAfterSevenDays(): Promise<void> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        try {
+            const deleteResult = await this.authRepository.delete({
+                deactivated_at: LessThan(sevenDaysAgo)
+            });
+            // 7일 내로 로그인을 한 번이라도 했다면 -> 계정 활성화 상태로 업데이트
+            // if (this.signIn) {
+
+            // }
             console.log("deleteResult: ", deleteResult.affected);
         } catch (error) {
             console.log("error", error);
