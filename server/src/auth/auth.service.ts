@@ -161,6 +161,13 @@ export class AuthService {
         const payload = { email };
         const accessToken = this.jwtService.sign(payload);
 
+        // 로그인 성공 시 deactivated_at을 null로 초기화
+        await this.authRepository.update(
+            user.id,
+            {
+                deactivated_at: null
+            });
+
         return { accessToken };
     }
 
@@ -269,15 +276,12 @@ export class AuthService {
     async deleteAccountIfInactiveAfterSevenDays(): Promise<void> {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
+        // 로그인할 때 항상 deactivated_at을 null로 초기화
+        // -> 7일 이내로 로그인 시 탈퇴 요청이 취소된다.
         try {
             const deleteResult = await this.authRepository.delete({
                 deactivated_at: LessThan(sevenDaysAgo)
             });
-            // 7일 내로 로그인을 한 번이라도 했다면 -> 계정 활성화 상태로 업데이트
-            // if (this.signIn) {
-
-            // }
             console.log("deleteResult: ", deleteResult.affected);
         } catch (error) {
             console.log("error", error);
