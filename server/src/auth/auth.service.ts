@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, LessThan, Repository, UpdateResult } from 'typeorm';
+import { LessThan, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import * as bcrypt from 'bcryptjs';
@@ -173,15 +173,8 @@ export class AuthService {
 
     async signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const { email, password, nickName } = authCredentialsDto;
-        const emailExists = await this.getEmailExistence(email);
-        if (emailExists) {
-            throw new UnauthorizedException("이미 등록된 이메일입니다.");
-        }
-
-        const nickNameExists = await this.getNickNameExistence(nickName);
-        if (nickNameExists) {
-            throw new UnauthorizedException("이미 등록된 닉네임입니다.");
-        }
+        await this.getEmailExistence(email);
+        await this.getNickNameExistence(nickName);
 
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
