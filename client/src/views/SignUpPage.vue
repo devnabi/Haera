@@ -87,7 +87,7 @@ export default {
       if (this.nickName && this.nickName.trim().length > 0) {
         //닉네임 중복 체크 요청
         try {
-          const response = await axios.get("/auth/checkNickName", {
+          const response = await axios.get("/auth/nickNameExists", {
             params: {
               nickName: this.nickName
             }

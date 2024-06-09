@@ -36,15 +36,15 @@ export class AuthService {
     }
 
     async getEmailExistence(email: string): Promise<Boolean> {
-        const emailCheckResult = await this.authRepository.existsBy({ email });
+        const emailExists = await this.authRepository.existsBy({ email });
 
-        return emailCheckResult;
+        return emailExists;
     }
 
     async getNickNameExistence(nickName: string): Promise<Boolean> {
-        const nickNameCheckResult = await this.authRepository.existsBy({ nickName });
+        const nickNameExists = await this.authRepository.existsBy({ nickName });
 
-        return nickNameCheckResult;
+        return nickNameExists;
     }
 
     async getUserById(id: number): Promise<User> {

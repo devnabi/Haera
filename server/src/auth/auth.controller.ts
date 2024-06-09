@@ -13,20 +13,20 @@ export class AuthController {
         return this.authService.getAllUser();
     }
 
-    @Get('/checkEmail')
+    @Get('/emailExists')
     async getEmailExistence(
         @Query('email') email: string
     ): Promise<Boolean> {
-        const emailCheckResult = await this.authService.getEmailExistence(email);
-        return emailCheckResult;
+        const emailExists = await this.authService.getEmailExistence(email);
+        return emailExists;
     }
 
-    @Get('/checkNickName')
+    @Get('/nickNameExists')
     async getNickNameExistence(
         @Query('nickName') nickName: string
     ): Promise<Boolean> {
-        const nickNameCheckResult = await this.authService.getNickNameExistence(nickName);
-        return nickNameCheckResult
+        const nickNameExists = await this.authService.getNickNameExistence(nickName);
+        return nickNameExists
     }
 
     @Get('/find/:id')
