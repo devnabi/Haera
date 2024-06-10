@@ -45,7 +45,8 @@
             <div class="input-group">
               <input type="text" v-model="nickName" class="form-control form-control-lg" placeholder="Nick Name"
                 aria-label="Recipient's username" aria-describedby="button-addon2">
-              <button @click="checkAvailability" class="btn btn-secondary btn-sm" type="button" id="button-addon2">Check
+              <button @click="checkNickNameAvailability" class="btn btn-secondary btn-sm" type="button"
+                id="button-addon2">Check
                 Availability</button>
             </div>
           </div>
@@ -71,20 +72,13 @@ export default {
       password: "",
       confirmPassword: "",
       nickName: "",
-      isNickNameChecked: false,
+      isNickNameChecked: true,
       errorMessage: ""
     }
   },
 
-  watch: {
-    // 닉네임이 변경될 때마다 isNickNameChecked를 false로 초기화
-    nickName() {
-      this.isNickNameChecked = false;
-    }
-  },
-
   methods: {
-    async checkAvailability() {
+    async checkNickNameAvailability() {
       if (this.nickName && this.nickName.trim().length > 0) {
         try {
           const response = await axios.get("/auth/nickNameExists", {
@@ -93,11 +87,11 @@ export default {
             }
           });
           this.isNickNameChecked = response.data;
-          if (this.isNickNameChecked) {
-            console.log("닉네임 중복 여부: ", this.isNickNameChecked);
+          if (!this.isNickNameChecked) {
+            console.log("사용가능한 닉네임입니다.", this.isNickNameChecked);
             return this.isNickNameChecked;
           } else {
-            console.log("닉네임 중복 여부: ", this.isNickNameChecked);
+            console.log("닉네임이 중복됩니다.", this.isNickNameChecked);
             return false;
           }
         } catch (error) {
@@ -129,7 +123,7 @@ export default {
       }
 
       // 닉네임 중복 체크가 되지 않았을 때
-      if (!this.isNickNameChecked) {
+      if (this.isNickNameChecked) {
         console.log("닉네임 중복 체크를 하셔야 합니다.");
         return;
       }
