@@ -47,7 +47,8 @@
           </div>
         </div>
 
-        <button @click.prevent="SignIn" type="submit" class="btn btn-primary btn-lg my-5">Sign In!</button>
+        <button @click.prevent="SignIn" type="submit" class="btn btn-primary btn-lg my-5">Sign
+          In!</button>
       </fieldset>
       <a class="text-secondary" href="/signup">Are you not a member?</a>
     </form>
@@ -64,7 +65,8 @@ export default {
   data() {
     return {
       email: "",
-      password: ""
+      password: "",
+      errorMessage: ""
     }
   },
 
@@ -75,19 +77,24 @@ export default {
         password: this.password,
       };
 
-      try {
-        const response = await axios.post("/auth/signIn", authCredentialsDto);
-        console.log("response", response.status);
-        const { accessToken } = response.data;
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("isSignedIn", "true");
-        localStorage.setItem("isSignInSuccess", "true");
-        await this.$router.push("/");
-        window.location.reload();
-      } catch (error) {
-        console.log("error", error);
+      if (this.email && this.password) {
+        try {
+          const response = await axios.post("/auth/signIn", authCredentialsDto);
+          const { accessToken } = response.data;
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("isSignedIn", "true");
+          localStorage.setItem("isSignInSuccess", "true");
+          await this.$router.push("/");
+          window.location.reload();
+        } catch (error) {
+          this.errorMessage = error.response.data.message;
+          console.log("errorMessage: ", this.errorMessage);
+          console.log("error", error);
+        }
+      } else {
+        console.log("이메일과 비밀번호 모두 입력하세요.");
       }
-    }
+    },
   }
 }
 </script>

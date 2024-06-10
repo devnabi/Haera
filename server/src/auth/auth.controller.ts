@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Query, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
@@ -31,11 +31,11 @@ export class AuthController {
 
     @Get('/find/:id')
     async getUserById(@Param('id') id: number): Promise<User> {
-        const found = await this.authService.getUserById(id);
-        if (!found) {
-            throw new NotFoundException(`'${id}' 유저를 찾을 수 없습니다.`);
+        const user = await this.authService.getUserById(id);
+        if (!user) {
+            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND)
         }
-        return found;
+        return user;
     }
 
     @Post('/sendVerificationEmail/:token')
@@ -59,6 +59,15 @@ export class AuthController {
         return this.authService.generateAndSaveHashedPassword(email);
     }
 
+    @Post('/validatePassword')
+    async validatePassword(@Body() authCredentialsDto: AuthCredentialsDto): Promise<Boolean> {
+        const isPasswordValid = await this.authService.validatePassword(authCredentialsDto);
+        if (!isPasswordValid) {
+            throw new HttpException("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        return isPasswordValid;
+    }
+
     @Post('/verifyTokenAndUpdateEmailVerificationStatus')
     async verifyTokenAndUpdateEmailVerificationStatus(
         @Query('token') token: string
@@ -76,13 +85,31 @@ export class AuthController {
     }
 
     @Post('/signIn')
-    signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        const accessToken = this.authService.signIn(authCredentialsDto);
-        return accessToken;
+    async signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken?: string }> {
+        const { email } = authCredentialsDto;
+        const emailExists = await this.authService.getEmailExistence(email);
+        if (!emailExists) {
+            throw new HttpException(`${email}: 등록되지 않은 유저입니다.`, HttpStatus.NOT_FOUND);
+        }
+        const isPasswordValid = await this.authService.validatePassword(authCredentialsDto);
+        if (!isPasswordValid) {
+            throw new HttpException("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        const { accessToken } = await this.authService.signIn(authCredentialsDto);
+        return { accessToken };
     }
 
     @Post('/signUp')
     async signUp(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
+        const { email, nickName } = authCredentialsDto;
+        const emailExists = await this.authService.getEmailExistence(email);
+        if (emailExists) {
+            throw new HttpException(`${email}: 이미 등록된 이메일입니다.`, HttpStatus.CONFLICT);
+        }
+        const nickNameExists = await this.authService.getNickNameExistence(nickName);
+        if (nickNameExists) {
+            throw new HttpException(`${nickName}: 이미 등록된 닉네임입니다.`, HttpStatus.CONFLICT);
+        }
         const accessToken = this.authService.signUp(authCredentialsDto);
         return accessToken;
     }

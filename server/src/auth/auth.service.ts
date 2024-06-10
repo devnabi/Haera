@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
@@ -37,13 +37,11 @@ export class AuthService {
 
     async getEmailExistence(email: string): Promise<Boolean> {
         const emailExists = await this.authRepository.existsBy({ email });
-
         return emailExists;
     }
 
     async getNickNameExistence(nickName: string): Promise<Boolean> {
         const nickNameExists = await this.authRepository.existsBy({ nickName });
-
         return nickNameExists;
     }
 
@@ -72,7 +70,7 @@ export class AuthService {
     }
 
     async sendPasswordResetEmail(email: string): Promise<void> {
-        const emailExists = await this.getEmailExistence(email);
+        await this.getEmailExistence(email);
         const passwordResetUrl = `${process.env.HAERA_URL}/temporarypasswordcreated?email=${email}`;
 
         const mailOptions = {
@@ -94,7 +92,6 @@ export class AuthService {
             symbols: true
         });
 
-        // 생성된 임시 비밀번호 전송
         const mailOptions = {
             from: process.env.SMTP_USER,
             to: email,
@@ -108,7 +105,6 @@ export class AuthService {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(temporaryPassword, salt);
 
-        // Update DB
         const updateResult = await this.authRepository.update(
             { email },
             {
@@ -118,11 +114,17 @@ export class AuthService {
         return updateResult;
     }
 
+    async validatePassword(authCredentialsDto: AuthCredentialsDto): Promise<Boolean> {
+        const { email, password } = authCredentialsDto;
+        const user = await this.authRepository.findOneBy({ email });
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        return isPasswordValid;
+    }
+
     // 토큰이 일치하는지 확인
     verifyTokenAndSaveEmail(token: string): string {
         const payload = this.jwtService.verify(token);
         const email = payload.email;
-
         return email;
     }
 
@@ -146,22 +148,13 @@ export class AuthService {
     }
 
     async signIn(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        const { email, password } = authCredentialsDto;
+        const { email } = authCredentialsDto;
         const user = await this.authRepository.findOneBy({ email });
-        if (!user) {
-            throw new UnauthorizedException(`Sign in failed.`);
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException(`Sign in failed.`);
-        }
 
         // 로그인 성공 시 JWT토큰 생성 (Payload + Secret)
         const payload = { email };
         const accessToken = this.jwtService.sign(payload);
 
-        // 로그인 성공 시 deactivated_at을 null로 초기화
         await this.authRepository.update(
             user.id,
             {
@@ -173,8 +166,6 @@ export class AuthService {
 
     async signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const { email, password, nickName } = authCredentialsDto;
-        await this.getEmailExistence(email);
-        await this.getNickNameExistence(nickName);
 
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -192,7 +183,6 @@ export class AuthService {
         const payload = { email };
         const accessToken = this.jwtService.sign(payload);
 
-        // 생성된 토큰으로 이메일 인증링크 보내기
         this.sendVerificationEmail(accessToken);
 
         return { accessToken };
@@ -204,7 +194,7 @@ export class AuthService {
         const user = await this.authRepository.findOneBy({ id });
 
         // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await this.validatePassword(authCredentialsDto);
         if (!isPasswordValid) {
             throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
         }

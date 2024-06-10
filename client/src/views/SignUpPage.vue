@@ -71,7 +71,8 @@ export default {
       password: "",
       confirmPassword: "",
       nickName: "",
-      isNickNameChecked: false
+      isNickNameChecked: false,
+      errorMessage: ""
     }
   },
 
@@ -85,24 +86,23 @@ export default {
   methods: {
     async checkAvailability() {
       if (this.nickName && this.nickName.trim().length > 0) {
-        //닉네임 중복 체크 요청
         try {
           const response = await axios.get("/auth/nickNameExists", {
             params: {
               nickName: this.nickName
             }
           });
-          console.log("닉네임 중복 여부: ", response.data);
-          if (response.data == false) {
-            this.isNickNameChecked = true;
-            console.log("닉네임 사용 가능");
+          this.isNickNameChecked = response.data;
+          if (this.isNickNameChecked) {
+            console.log("닉네임 중복 여부: ", this.isNickNameChecked);
+            return this.isNickNameChecked;
           } else {
-            this.isNickNameChecked = false;
-            console.log("닉네임 중복");
+            console.log("닉네임 중복 여부: ", this.isNickNameChecked);
+            return false;
           }
         } catch (error) {
-          this.isNickNameChecked = false;
           console.log("error", error);
+          return false;
         }
       } else {
         console.log("닉네임은 필수 항목이며, 0자 이상이여야 합니다.");
@@ -146,6 +146,8 @@ export default {
         await this.$router.push("/");
         window.location.reload();
       } catch (error) {
+        this.errorMessage = error.response.data.message;
+        console.log("errorMessage: ", this.errorMessage);
         console.log("error", error);
       }
     },
