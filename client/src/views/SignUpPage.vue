@@ -79,57 +79,37 @@ export default {
 
   methods: {
     async checkNickNameAvailability() {
-      if (this.nickName && this.nickName.trim().length > 0) {
-        try {
-          const response = await axios.get("/auth/nickNameExists", {
-            params: {
-              nickName: this.nickName
-            }
-          });
-          this.isNickNameChecked = response.data;
-          if (!this.isNickNameChecked) {
-            console.log("사용가능한 닉네임입니다.", this.isNickNameChecked);
-            return this.isNickNameChecked;
-          } else {
-            console.log("닉네임이 중복됩니다.", this.isNickNameChecked);
-            return false;
+      try {
+        const response = await axios.get("/auth/nickNameExists", {
+          params: {
+            nickName: this.nickName
           }
-        } catch (error) {
-          console.log("error", error);
+        });
+        this.isNickNameChecked = response.data;
+        if (!this.isNickNameChecked) {
+          console.log("사용가능한 닉네임입니다.", this.isNickNameChecked);
+          return this.isNickNameChecked;
+        } else {
+          console.log("닉네임이 중복됩니다.", this.isNickNameChecked);
           return false;
         }
-      } else {
-        console.log("닉네임은 필수 항목이며, 0자 이상이여야 합니다.");
+      } catch (error) {
+        console.log("error", error);
+        return false;
       }
+
     },
 
     async signUp() {
-      const authCredentialsDto = {
+      const authCreateDto = {
         email: this.email,
         password: this.password,
         confirmPassword: this.confirmPassword,
         nickName: this.nickName
       };
 
-      // 이메일이 입력되지 않았을 때
-      if (!this.email) {
-        console.log("이메일을 입력해야 합니다.");
-        return;
-      }
-      // 비밀번호가 입력되지 않았거나 비밀번호가 일치하지 않을 때
-      if ((!this.password) || (this.password.trim().length < 8) || (this.password !== this.confirmPassword)) {
-        console.log("비밀번호를 8자 이상 입력해야 하며, 비밀번호와 확인 비밀번호가 일치해야 합니다.");
-        return;
-      }
-
-      // 닉네임 중복 체크가 되지 않았을 때
-      if (this.isNickNameChecked) {
-        console.log("닉네임 중복 체크를 하셔야 합니다.");
-        return;
-      }
-
       try {
-        const response = await axios.post("/auth/signUp", authCredentialsDto);
+        const response = await axios.post("/auth/signUp", authCreateDto);
         console.log("회원가입 성공 여부: ", response.data);
         const { accessToken } = response.data;
         localStorage.setItem("accessToken", accessToken);

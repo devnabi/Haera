@@ -72,14 +72,12 @@ export default {
 
   methods: {
     async SignIn() {
-      const authCredentialsDto = {
+      const authCreateDto = {
         email: this.email,
         password: this.password,
       };
-
-      if (this.email && this.password) {
         try {
-          const response = await axios.post("/auth/signIn", authCredentialsDto);
+          const response = await axios.post("/auth/signIn", authCreateDto);
           const { accessToken } = response.data;
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("isSignedIn", "true");
@@ -91,9 +89,6 @@ export default {
           console.log("errorMessage: ", this.errorMessage);
           console.log("error", error);
         }
-      } else {
-        console.log("이메일과 비밀번호 모두 입력하세요.");
-      }
     },
   }
 }

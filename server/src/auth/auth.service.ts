@@ -2,7 +2,9 @@ import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@n
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
-import { AuthCredentialsDto } from './dto/auth-credential.dto';
+import { AuthCreateDto } from './dto/auth-create.dto';
+import { AuthUpdateDto } from './dto/auth-update.dto';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -164,8 +166,8 @@ export class AuthService {
         return { accessToken };
     }
 
-    async signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        const { email, password, nickName } = authCredentialsDto;
+    async signUp(authCreateDto: AuthCreateDto): Promise<{ accessToken: string }> {
+        const { email, password, nickName } = authCreateDto;
 
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -188,32 +190,18 @@ export class AuthService {
         return { accessToken };
     }
 
-    async updateUser(id: number, authCredentialsDto: AuthCredentialsDto, newPassword: string): Promise<void> {
-        const { password, nickName } = authCredentialsDto;
-        // 사용자 데이터를 가져와서 비교
-        const user = await this.authRepository.findOneBy({ id });
+    async updateUser(id: number, authUpdateDto: AuthUpdateDto): Promise<void> {
+        const { newPassword, nickName } = authUpdateDto;
+        const user = await this.getUserById(id);
 
-        // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
-        const isPasswordValid = await this.validatePassword(authCredentialsDto);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException("기존 비밀번호가 틀립니다.");
-        }
-
-        // 새로운 비번이 있다면 해싱하여 저장
-        if (newPassword && newPassword.trim().length >= 8) {
+        if ((newPassword) && (newPassword.trim().length >= 8)) {
             const salt = await bcrypt.genSalt();
             const hashedPassword = await bcrypt.hash(newPassword, salt);
             await this.authRepository.update(id, { password: hashedPassword });
         }
-
         // 본인의 닉네임을 변경하지 않고 그대로 보낼 경우는 어떻게 처리?
         // -> 비번만 바꾸려고 했는데 이미 등록됐다고 에러를 던지면 닉넴까지 강제로 변경해야 된다는 뜻이 됨...
         if ((nickName) && (nickName !== user.nickName) && (nickName.trim().length > 0)) {
-            // 요청한 닉네임 중복 확인
-            const nickNameExists = await this.getNickNameExistence(nickName);
-            if (nickNameExists) {
-                throw new UnauthorizedException("이미 등록된 닉네임입니다.");
-            }
             await this.authRepository.update(id, { nickName: nickName });
         }
     }

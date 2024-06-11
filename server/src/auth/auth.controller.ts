@@ -1,6 +1,8 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthCredentialsDto } from './dto/auth-credential.dto';
+import { AuthCreateDto } from './dto/auth-create.dto';
+import { AuthUpdateDto } from './dto/auth-update.dto';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { User } from './user.entity';
 import { UpdateResult } from 'typeorm';
 
@@ -30,7 +32,9 @@ export class AuthController {
     }
 
     @Get('/find/:id')
-    async getUserById(@Param('id') id: number): Promise<User> {
+    async getUserById(
+        @Param('id') id: number
+    ): Promise<User> {
         const user = await this.authService.getUserById(id);
         if (!user) {
             throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND)
@@ -60,7 +64,9 @@ export class AuthController {
     }
 
     @Post('/validatePassword')
-    async validatePassword(@Body() authCredentialsDto: AuthCredentialsDto): Promise<Boolean> {
+    async validatePassword(
+        @Body() authCredentialsDto: AuthCredentialsDto
+    ): Promise<Boolean> {
         const isPasswordValid = await this.authService.validatePassword(authCredentialsDto);
         if (!isPasswordValid) {
             throw new HttpException("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
@@ -85,7 +91,7 @@ export class AuthController {
     }
 
     @Post('/signIn')
-    async signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken?: string }> {
+    async signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const { email } = authCredentialsDto;
         const emailExists = await this.authService.getEmailExistence(email);
         if (!emailExists) {
@@ -100,27 +106,46 @@ export class AuthController {
     }
 
     @Post('/signUp')
-    async signUp(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
-        const { email, nickName } = authCredentialsDto;
+    async signUp(@Body() authCreateDto: AuthCreateDto): Promise<{ accessToken: string }> {
+        const { email, password, confirmPassword, nickName } = authCreateDto;
         const emailExists = await this.authService.getEmailExistence(email);
         if (emailExists) {
             throw new HttpException(`${email}: 이미 등록된 이메일입니다.`, HttpStatus.CONFLICT);
+        }
+        if (password !== confirmPassword) {
+            throw new HttpException("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
         const nickNameExists = await this.authService.getNickNameExistence(nickName);
         if (nickNameExists) {
             throw new HttpException(`${nickName}: 이미 등록된 닉네임입니다.`, HttpStatus.CONFLICT);
         }
-        const accessToken = this.authService.signUp(authCredentialsDto);
-        return accessToken;
+        const { accessToken } = await this.authService.signUp(authCreateDto);
+        return { accessToken };
     }
 
     @Patch('/update/:id')
     async updateUser(
         @Param('id') id: number,
-        @Body() authCredentialsDto: AuthCredentialsDto,
-        @Body('newPassword') newPassword: string
+        @Body() authUpdateDto: AuthUpdateDto
     ) {
-        return await this.authService.updateUser(id, authCredentialsDto, newPassword);
+        const { email, password, newPassword, confirmPassword, nickName } = authUpdateDto;
+        const user = await this.authService.getUserById(id);
+        if (!user) {
+            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND)
+        }
+        const isPasswordValid = await this.authService.validatePassword({ email: email, password });
+        if (!isPasswordValid || password.trim().length < 1) {
+            throw new HttpException("기존 비밀번호는 필수 항목이며, 일치해야 합니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (newPassword !== confirmPassword) {
+            throw new HttpException("새로운 비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        const nickNameExists = await this.authService.getNickNameExistence(nickName);
+        if ((nickNameExists) && (nickName !== user.nickName)) {
+            throw new HttpException("이미 사용중인 닉네임입니다.", HttpStatus.CONFLICT);
+        }
+
+        return await this.authService.updateUser(id, authUpdateDto);
     }
 
     @Patch('/deactivateUserAccount/:id')

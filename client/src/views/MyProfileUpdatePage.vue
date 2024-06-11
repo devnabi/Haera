@@ -53,7 +53,7 @@
                         <div class="input-group">
                             <input type="text" v-model="userData.nickName" class="form-control form-control-lg"
                                 placeholder="Nick Name" aria-label="Recipient's username" aria-describedby="button-addon2">
-                            <button class="btn btn-secondary btn-sm" @click="checkAvailability" type="button"
+                            <button class="btn btn-secondary btn-sm" @click="checkNickNameAvailability" type="button"
                                 id="button-addon2">Check
                                 Availability</button>
                         </div>
@@ -91,14 +91,16 @@ export default {
             newPassword: "",
             confirmPassword: "",
             nickName: "",
-            userData: {}
+            userData: {},
+            isNickNameChecked: true,
+            errorMessage: ""
         }
     },
 
     setup() {
         const requireSignIn = (callback) => {
             toast("로그인을 하셔야 접근이 가능합니다.", {
-                autoClose: 2000,
+                autoClose: 1000,
                 position: "top-center",
                 theme: "dark",
                 type: "warning",
@@ -110,7 +112,7 @@ export default {
 
         const updateSuccessToast = () => {
             toast("업데이트 성공!", {
-                autoClose: 2000,
+                autoClose: 1000,
                 position: "top-center",
                 theme: "dark",
                 type: "success",
@@ -143,46 +145,51 @@ export default {
     },
 
     methods: {
-        goToLeaveCheck() {
-            this.$router.push("/leavecheck");
-        },
-
-        async checkAvailability() {
-            //닉네임 중복 체크 요청
+        async checkNickNameAvailability() {
             try {
-                const response = await axios.get("/auth/checkNickName", {
+                const response = await axios.get("/auth/nickNameExists", {
                     params: {
-                        nickName: this.nickName
+                        nickName: this.userData.nickName
                     }
                 });
-                console.log("닉네임 중복 여부: ", response.data);
+                this.isNickNameChecked = response.data;
+                if (!this.isNickNameChecked) {
+                    console.log("사용가능한 닉네임입니다.", this.isNickNameChecked);
+                    return this.isNickNameChecked;
+                } else {
+                    console.log("닉네임이 중복됩니다.", this.isNickNameChecked);
+                    return false;
+                }
             } catch (error) {
                 console.log("error", error);
+                return false;
             }
         },
 
         async updateProfile() {
-            // 사용자의 id 추출
             const { id } = this.userData;
 
-            const authCredentialsDto = {
+            const authUpdateDto = {
+                email: this.userData.email,
                 password: this.password,
                 newPassword: this.newPassword,
                 confirmPassword: this.confirmPassword,
                 nickName: this.userData.nickName
             }
-
-            if (this.newPassword === this.confirmPassword) {
-                try {
-                    const response = await axios.patch(`/auth/update/${id}`, authCredentialsDto);
-                    this.updateSuccessToast();
-                    console.log("response", response);
-                } catch (error) {
-                    console.log("error", error);
-                }
-            } else {
-                console.log("비밀번호가 일치하지 않습니다.");
+            try {
+                const response = await axios.patch(`/auth/update/${id}`, authUpdateDto);
+                this.updateSuccessToast();
+                console.log("response", response);
+            } catch (error) {
+                this.errorMessage = error.response.data.message;
+                console.log("errorMessage: ", this.errorMessage);
+                console.log("error", error);
             }
+
+        },
+
+        goToLeaveCheck() {
+            this.$router.push("/leavecheck");
         },
 
         cancel() {
