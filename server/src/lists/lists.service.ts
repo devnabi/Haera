@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InquiryStatus } from "./list-inquiryStatus.enum";
 import { CreateListItemDto } from './dto/create-listItem.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { List } from './list.entitiy';
 import { ListItem } from './listItem.entity';
 import { User } from 'src/auth/user.entity';
 import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class ListsService {
@@ -53,9 +54,6 @@ export class ListsService {
             todo_text: Like(`%${keyword}%`),
             list_id: list.id
         });
-        if (listItems.length == 0) {
-            throw new NotFoundException(`'${keyword}': 존재하지 않는 키워드`);
-        }
 
         return listItems;
     }
@@ -66,7 +64,26 @@ export class ListsService {
             list_id: list.id,
             id
         });
+
         return listItem;
+    }
+
+    async fetchPaginatedListItems(paginationDto: PaginationDto, user: User): Promise<{ listItems: ListItem[], total: number }> {
+        const { currentPage, perPage, listStatus } = paginationDto;
+        const list = await this.listRepository.findOneBy({ user_id: user.id });
+        const query: any = {
+            where: { list_id: list.id },
+            skip: currentPage <= 0 ? 0 : (currentPage - 1) * perPage,
+            take: perPage
+        };
+        if (listStatus === "true") {
+            query.where.status = true;
+        } else if (listStatus === "false") {
+            query.where.status = false;
+        }
+        const [ listItems, total ] = await this.listItemRepository.findAndCount(query);
+
+        return { listItems, total };
     }
 
     async createList(user: User): Promise<List> {
@@ -92,17 +109,14 @@ export class ListsService {
 
     async updateListItem(id: number, todo_text: string, user: User): Promise<UpdateResult> {
         const list = await this.listRepository.findOneBy({ user_id: user.id });
-        const isValidListItemId = await this.listItemRepository.existsBy({
-            // list_id가 list에 있는 id와 같은 것이 존재하는지 확인
+        const listItemExists = await this.listItemRepository.existsBy({
             list_id: list.id,
-            // 요청한 리스트 아이템 id와 같은 것이 존재하는지 확인
             id
         });
-        if (!isValidListItemId) {
-            throw new UnauthorizedException();
+        if (!listItemExists) {
+            throw new NotFoundException();
         }
 
-        // update (업데이트)
         const updateResult = await this.listItemRepository.update(
             id,
             {
@@ -113,15 +127,14 @@ export class ListsService {
         return updateResult;
     }
 
-    // listItem의 상태 업데이트
     async updateListItemStatus(id: number, status: boolean, user: User): Promise<UpdateResult> {
         const list = await this.listRepository.findOneBy({ user_id: user.id });
-        const isValidListItemId = await this.listItemRepository.existsBy({
+        const listItemExists = await this.listItemRepository.existsBy({
             list_id: list.id,
             id
         });
-        if (!isValidListItemId) {
-            throw new UnauthorizedException();
+        if (!listItemExists) {
+            throw new NotFoundException();
         }
 
         // 상태를 반대로 업데이트
@@ -138,15 +151,13 @@ export class ListsService {
 
     async deleteListItem(id: number, user: User): Promise<DeleteResult> {
         const list = await this.listRepository.findOneBy({ user_id: user.id });
-        const isValidListItemId = await this.listItemRepository.existsBy({
+        const listItemExists = await this.listItemRepository.existsBy({
             list_id: list.id,
             id
         });
-        if (!isValidListItemId) {
-            throw new UnauthorizedException();
+        if (!listItemExists) {
+            throw new NotFoundException();
         }
-
-        // Delete (삭제)
         const deleteResult = await this.listItemRepository.delete({ id });
 
         return deleteResult;

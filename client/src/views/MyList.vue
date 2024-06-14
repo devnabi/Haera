@@ -25,13 +25,13 @@
                                     <div class="d-flex">
                                         <ul class="nav nav-tabs mt-2 mb-2 pb-2" id="ex1" role="tablist">
                                             <li @click="getAllListItem" class="nav-item" role="presentation">
-                                                <a class="nav-link active" id="ex1-tab-2" data-mdb-tab-init
-                                                    href="#ex1-tabs-2" role="tab" aria-controls="ex1-tabs-2"
-                                                    aria-selected="false">All</a>
+                                                <a class="nav-link" id="ex1-tab-2" data-mdb-tab-init href="#ex1-tabs-2"
+                                                    role="tab" aria-controls="ex1-tabs-2" aria-selected="false">All</a>
                                             </li>
                                             <li @click="getActiveListItems" class="nav-item" role="presentation">
                                                 <a class="nav-link" id="ex1-tab-2" data-mdb-tab-init href="#ex1-tabs-2"
-                                                    role="tab" aria-controls="ex1-tabs-2" aria-selected="false">Active</a>
+                                                    role="tab" aria-controls="ex1-tabs-2"
+                                                    aria-selected="false">Active</a>
                                             </li>
                                             <li @click="getCompletedListItems" class="nav-item" role="presentation">
                                                 <a class="nav-link" id="ex1-tab-3" data-mdb-tab-init href="#ex1-tabs-3"
@@ -42,8 +42,8 @@
                                                 <div class="d-flex position-absolute end-0 mb-2 me-3">
                                                     <input class="form-control border-info me-2" type="text"
                                                         v-model="todo_text" placeholder="New task...">
-                                                    <button @click.prevent="createListItem" class="btn btn-secondary btn-lg"
-                                                        type="submit">➕Add</button>
+                                                    <button @click.prevent="createListItem"
+                                                        class="btn btn-secondary btn-lg" type="submit">➕Add</button>
                                                 </div>
                                             </form>
                                         </ul>
@@ -54,9 +54,13 @@
                                         <div class="tab-pane fade show active" id="ex1-tabs-1" role="tabpanel"
                                             aria-labelledby="ex1-tab-1">
                                             <ul class="list-group mb-0">
+                                                <li v-if="listItems.length === 0">
+                                                    나만의 리스트를 만들어보세요!
+                                                </li>
                                                 <li @dblclick="updateListItemStatus(listItem.id, listItem.status)"
-                                                    v-for="(listItem, i) in listItems" :key="i" v-bind:listItem="listItem"
-                                                    @mouseover="applyHoverStyles(i)" @mouseleave="removeHoverStyles(i)"
+                                                    v-for="(listItem, i) in listItems" :key="i"
+                                                    v-bind:listItem="listItem" @mouseover="applyHoverStyles(i)"
+                                                    @mouseleave="removeHoverStyles(i)"
                                                     class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
                                                     :style="[listItem.hoverStyles, { 'background-color': listItem.isHovered ? '#ddf4d4' : '#f4f6f0' }]">
                                                     <div v-if="listItem.status">
@@ -72,35 +76,24 @@
                                                             @click="deleteListItem(listItem.id)">❌</button>
                                                     </div>
                                                 </li>
+
+                                                <!-- listItem.length가 perPage보다 작으면 페이지네이션 박스가 움직여서 좋지 않으니 빈 항목들 추가 -->
+                                                <li v-for="n in emptyItems" :key="'placeholder-' + n"
+                                                    class="list-group-item d-flex align-items-center border-0 mb-2 rounded"
+                                                    style="background-color: #f4f6f0;">
+                                                    <div class="w-100">&nbsp;</div>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
 
                                     <!-- pagination -->
                                     <div class="row d-flex justify-content-center mt-5">
-                                        <ul class="justify-content-center pagination">
-                                            <li class="page-item disabled">
-                                                <a class="page-link" href="#">&laquo;</a>
-                                            </li>
-                                            <li class="page-item active">
-                                                <a class="page-link" href="#">1</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#">2</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#">3</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#">4</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#">5</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#">&raquo;</a>
-                                            </li>
-                                        </ul>
+                                        <div class="col-auto overflow-auto">
+                                            <b-pagination @page-click="handlePageClick" v-model="currentPage"
+                                                :total-rows="rows" :per-page="perPage" first-text=&laquo; prev-text="<"
+                                                next-text=">" last-text=&raquo;></b-pagination>
+                                        </div>
                                     </div>
 
                                 </div>
@@ -130,8 +123,38 @@ export default {
             add: "",
             todo_text: "",
             status: "",
+            listStatus: null, // Active(false), Completed(true)
             listItems: [],
-            isHovered: true
+            isHovered: true,
+            currentPage: 1,
+            perPage: 5, // 페이지당 데이터 수
+            total: 0
+        }
+    },
+
+    computed: {
+        rows() {
+            // 보여줄 페이지네이션 수
+            return this.total;
+        },
+
+        emptyItems() {
+            // 움수가 되지 않도록
+            return Math.max(0, this.perPage - this.listItems.length);
+        }
+    },
+
+    async mounted() {
+        // 토큰을 통해 사용자를 찾기, 그 사용자의 닉네임을 바인딩
+        this.token = localStorage.getItem("accessToken");
+        try {
+            const response = await axios.get(`/auth/getValidateUser/${this.token}`);
+            this.nickName = response.data.nickName;
+            console.log("response", response.data.nickName);
+            // total에 따라 페이지 나타내기
+            await this.fetchPaginatedListItems();
+        } catch (error) {
+            console.log("error", error);
         }
     },
 
@@ -182,20 +205,6 @@ export default {
         return { keywordPromptToast, nonexistentKeywordToast, showInputRequiredToast, showEditCancelledToast };
     },
 
-    async mounted() {
-        // 토큰을 통해 사용자를 찾기, 그 사용자의 닉네임을 바인딩
-        this.token = localStorage.getItem("accessToken");
-        try {
-            const response = await axios.get(`/auth/getValidateUser/${this.token}`);
-            this.nickName = response.data.nickName;
-            console.log("response", response.data.nickName);
-            // 마이리스트 페이지에 들어오면 항상 all로 조회
-            this.getAllListItem();
-        } catch (error) {
-            console.log("error", error);
-        }
-    },
-
     methods: {
         applyHoverStyles(i) {
             this.listItems[i].isHovered = true;
@@ -212,6 +221,29 @@ export default {
             };
         },
 
+        async handlePageClick(event) {
+            // 페이지를 클릭 시 객체가 받아지는 상황 -> 객체에서 페이지 번호 추출하고 형변환
+            const pageText = event.target.value || event.target.innerText;
+            const totalPages = Math.ceil(this.total / this.perPage);
+            let page = this.currentPage;
+
+            if (pageText === "<") {
+                page = Math.max(--this.currentPage, 1);
+            } else if (pageText === ">") {
+                page = Math.min(++this.currentPage, totalPages);
+            } else if (pageText === "«") {
+                page = 1;
+            } else if (pageText === "»") {
+                page = totalPages;
+            } else {
+                page = Number(pageText);
+            }
+
+            console.log("Clicked Page:", page);
+            this.currentPage = page;
+            await this.fetchPaginatedListItems();
+        },
+
         async getAllListItem() {
             try {
                 const response = await axios.get("/lists/item", {
@@ -220,6 +252,10 @@ export default {
                     }
                 });
                 this.listItems = response.data;
+                this.listStatus = null;
+                this.currentPage = 1;
+                await this.fetchPaginatedListItems();
+                console.log("All");
             } catch (error) {
                 console.log("error", error);
             }
@@ -233,6 +269,10 @@ export default {
                     }
                 });
                 this.listItems = response.data;
+                this.listStatus = false;
+                this.currentPage = 1;
+                await this.fetchPaginatedListItems();
+                console.log("Active");
             } catch (error) {
                 console.log("error", error);
             }
@@ -246,6 +286,10 @@ export default {
                     }
                 });
                 this.listItems = response.data;
+                this.listStatus = true;
+                this.currentPage = 1;
+                await this.fetchPaginatedListItems();
+                console.log("Completed");
             } catch (error) {
                 console.log("error", error);
             }
@@ -260,6 +304,7 @@ export default {
                         }
                     });
                     this.listItems = response.data;
+                    this.keyword = "";
                     if (this.listItems.length == 0) {
                         this.nonexistentKeywordToast();
                     }
@@ -269,6 +314,30 @@ export default {
                 }
             } else {
                 this.keywordPromptToast();
+            }
+        },
+
+        async fetchPaginatedListItems() {
+            const paginationDto = {
+                currentPage: this.currentPage,
+                perPage: this.perPage,
+                listStatus: this.listStatus
+            }
+            try {
+                const response = await axios.post("/lists/item/pagination", {}, {
+                    params: paginationDto,
+                    headers: {
+                        Authorization: `Bearer ${this.token}`
+                    }
+                });
+                if (response.data) {
+                    this.listItems = response.data.listItems || [];
+                    this.total = response.data.total || 0;
+                }
+                console.log("ListItems: ", this.listItems);
+                console.log("Total: ", this.total);
+            } catch (error) {
+                console.log("error", error);
             }
         },
 
@@ -283,7 +352,8 @@ export default {
                             Authorization: `Bearer ${this.token}`
                         }
                     });
-                    window.location.reload();
+                    this.listItems.push(response.data);
+                    this.todo_text = "";
                     console.log("response", response);
                 } catch (error) {
                     console.log("error", error);
@@ -306,7 +376,7 @@ export default {
                             }
                         }
                     );
-                    window.location.reload();
+                    this.listItems[i].todo_text = promptInput;
                     console.log("response", response.data);
                 } catch (error) {
                     console.log("error", error);
@@ -327,7 +397,8 @@ export default {
                             Authorization: `Bearer ${this.token}`
                         }
                     });
-                window.location.reload();
+                const index = this.listItems.findIndex(item => item.id == id);
+                this.listItems[index].status = !status;
                 console.log("response", response.data);
             } catch (error) {
                 console.log("error", error);
@@ -343,7 +414,8 @@ export default {
                         }
                     }
                 );
-                window.location.reload();
+                const index = this.listItems.findIndex(item => item.id == id);
+                this.listItems.splice(index, 1);
                 console.log("response", response.status);
             } catch (error) {
                 console.log("error", error);

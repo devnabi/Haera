@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UsePipes, ValidationPipe, NotFoundException, UseGuards, Request } from '@nestjs/common';
 import { ListsService } from './lists.service';
 import { CreateListItemDto } from './dto/create-listItem.dto';
+import { PaginationDto } from './dto/pagination.dto';
 import { List } from './list.entitiy';
 import { ListItem } from './listItem.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
@@ -51,6 +52,15 @@ export class ListsController {
     ): Promise<ListItem> {
         const user = req.user;
         return this.listsService.getListItemById(id, user);
+    }
+
+    @Post('/item/pagination')
+    fetchPaginatedListItems(
+        @Query() paginationDto: PaginationDto,
+        @Request() req
+    ): Promise<{ listItems: ListItem[], total: number }> {
+        const user = req.user;
+        return this.listsService.fetchPaginatedListItems(paginationDto, user);
     }
 
     @Post()
