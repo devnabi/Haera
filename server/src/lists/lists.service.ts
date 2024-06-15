@@ -71,17 +71,14 @@ export class ListsService {
     async fetchPaginatedListItems(paginationDto: PaginationDto, user: User): Promise<{ listItems: ListItem[], total: number }> {
         const { currentPage, perPage, listStatus } = paginationDto;
         const list = await this.listRepository.findOneBy({ user_id: user.id });
-        const query: any = {
-            where: { list_id: list.id },
+        const [listItems, total] = await this.listItemRepository.findAndCount({
+            where: {
+                list_id: list.id,
+                status: listStatus
+            },
             skip: currentPage <= 0 ? 0 : (currentPage - 1) * perPage,
             take: perPage
-        };
-        if (listStatus === "true") {
-            query.where.status = true;
-        } else if (listStatus === "false") {
-            query.where.status = false;
-        }
-        const [ listItems, total ] = await this.listItemRepository.findAndCount(query);
+        });
 
         return { listItems, total };
     }

@@ -324,8 +324,7 @@ export default {
                 listStatus: this.listStatus
             }
             try {
-                const response = await axios.post("/lists/item/pagination", {}, {
-                    params: paginationDto,
+                const response = await axios.post("/lists/item/pagination", paginationDto, {
                     headers: {
                         Authorization: `Bearer ${this.token}`
                     }
