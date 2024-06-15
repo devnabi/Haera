@@ -5,6 +5,4 @@
 당신이 하고 싶은 것과 삶을 알차게 만들기 위해 해야 할 것을 적어보세요!😊<br>
 
 ### Demo
-<video width="80%" controls>
-  <source src="https://github.com/devnabi/Haera/assets/114222560/2adc1607-fac1-4b90-aad4-0a80a6fb6aee" type="video/mp4">
-</video>
+https://github.com/devnabi/Haera/assets/114222560/2adc1607-fac1-4b90-aad4-0a80a6fb6aee
