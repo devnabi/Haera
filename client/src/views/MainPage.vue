@@ -30,9 +30,9 @@
         </video>
       </div>
 
-      <div class="position-fixed bottom-0 mb-5">
-        <div class="d-flex justify-content-end me-5 mb-5">
-          <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg mt-5 py-4 px-5"
+      <div class="position-relative">
+        <div class="position-fixed bottom-0 end-0 mb-5">
+          <button type="button" @click="goToMyList" class="btn btn-secondary btn-lg mb-5 me-5 py-4 px-5"
             style="box-shadow: 0 0 10px magenta;"><strong>Go To
               MyList</strong></button>
         </div>
