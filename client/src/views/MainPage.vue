@@ -22,9 +22,20 @@
         </div>
       </div>
 
-      <div class="position-relative mt-5">
-        <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg mt-5 py-4 px-5"><strong>Go To
-            MyList</strong></button>
+      <div>
+        <h2 class="text-primary mt-5" style="font-family: 'Sofia';">Demo</h2>
+        <video width="100%" controls>
+          <source src="https://github.com/devnabi/Haera/assets/114222560/2adc1607-fac1-4b90-aad4-0a80a6fb6aee"
+            type="video/mp4">
+        </video>
+      </div>
+
+      <div class="position-fixed bottom-0 mb-5">
+        <div class="d-flex justify-content-end me-5 mb-5">
+          <button type="button" @click="goToMyList" class="btn btn-outline-secondary btn-lg mt-5 py-4 px-5"
+            style="box-shadow: 0 0 10px magenta;"><strong>Go To
+              MyList</strong></button>
+        </div>
       </div>
 
     </div>
