@@ -22,9 +22,9 @@
         </div>
       </div>
 
-      <div>
+      <div class="p-2">
         <h2 class="text-primary mt-5" style="font-family: 'Sofia';">Demo</h2>
-        <video width="100%" controls>
+        <video class="border border-primary" width="100%" controls>
           <source src="https://github.com/devnabi/Haera/assets/114222560/2adc1607-fac1-4b90-aad4-0a80a6fb6aee"
             type="video/mp4">
         </video>
