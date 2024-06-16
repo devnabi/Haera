@@ -28,7 +28,7 @@ export class AuthController {
         @Query('nickName') nickName: string
     ): Promise<Boolean> {
         const nickNameExists = await this.authService.getNickNameExistence(nickName);
-        return nickNameExists
+        return nickNameExists;
     }
 
     @Get('/find/:id')
@@ -37,7 +37,7 @@ export class AuthController {
     ): Promise<User> {
         const user = await this.authService.getUserById(id);
         if (!user) {
-            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND);
         }
         return user;
     }
@@ -131,7 +131,7 @@ export class AuthController {
         const { email, password, newPassword, confirmPassword, nickName } = authUpdateDto;
         const user = await this.authService.getUserById(id);
         if (!user) {
-            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`'${id}' 유저를 찾을 수 없습니다.`, HttpStatus.NOT_FOUND);
         }
         const isPasswordValid = await this.authService.validatePassword({ email: email, password });
         if (!isPasswordValid || password.trim().length < 1) {

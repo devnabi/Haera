@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository, UpdateResult } from 'typeorm';
 import { User } from './user.entity';
@@ -207,8 +207,7 @@ export class AuthService {
     }
 
     async deactivateUserAccount(id: number, password: string): Promise<UpdateResult> {
-        const user = await this.authRepository.findOneBy({ id });
-        // 사용자가 입력한 password가 DB에 담긴 password와 일치하는지 확인
+        const user = await this.getUserById(id);
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             throw new UnauthorizedException("비밀번호가 틀립니다.");
