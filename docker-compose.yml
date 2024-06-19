@@ -1,0 +1,33 @@
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: ./Dockerfile
+    image: haera-client-image:dev
+    ports:
+      - "8080:8080"
+    networks:
+      - bridge-network
+    restart: always
+    env_file:
+      - ./client/.env.compose
+
+  server:
+    build:
+        context: ./server
+        dockerfile: ./Dockerfile
+    image: haera-server-image:dev
+    ports:
+      - "3000:3000"
+    networks:
+      - bridge-network
+    restart: always
+    env_file:
+      - ./server/.env.configuration
+    environment:
+      NODE_ENV: production
+      DEBUG: "true"
+
+networks:
+  bridge-network:
+    driver: bridge
